@@ -24,7 +24,7 @@ abstract class Device(
 
     val authenticated: Boolean get() = client.authenticated
 
-    protected val client: TapoClient
+    protected lateinit var client: TapoClient
 
     init {
         this.alias = deviceAlias
@@ -32,9 +32,20 @@ abstract class Device(
         this.model = deviceModel
         this.type = deviceType
         this.endpoint = endpoint
-        this.client = TapoClient(endpoint)
         this.ipAddress = ipAddress
         this.status = deviceStatus
+        
+        // Parse IP address from ipAddress string to create client with IP constructor
+        // This enables KLAP protocol support for device control
+        try {
+            val ipBytes = ipAddress.split(".").map { it.toInt().toByte() }.toByteArray()
+            val inet4Address = java.net.Inet4Address.getByAddress(ipBytes) as java.net.Inet4Address
+            this.client = TapoClient(inet4Address)
+        } catch (e: Exception) {
+            // Fallback to URL-based constructor if IP parsing fails
+            Log.w(TAG, "Failed to parse IP address, falling back to URL constructor: ${e.message}")
+            this.client = TapoClient(endpoint)
+        }
     }
 
     suspend fun login(username: String, password: String) {

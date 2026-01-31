@@ -17,6 +17,7 @@ import dev.veeso.opentapowearos.tapo.device.Device
 import dev.veeso.opentapowearos.tapo.device.DeviceBuilder
 import dev.veeso.opentapowearos.tapo.device.DeviceModel
 import dev.veeso.opentapowearos.tapo.device.DeviceStatus
+import dev.veeso.opentapowearos.tapo.api.tapo.protocol.KlapProtocol
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
@@ -30,19 +31,27 @@ import kotlinx.serialization.decodeFromString
 import java.net.Inet4Address
 import java.util.Base64
 
+enum class ProtocolType {
+    KLAP,
+    PASSTHROUGH
+}
+
 class TapoClient {
 
     private var url: String
+    private var ipAddress: Inet4Address? = null
     private val terminalUUID: String = "00-00-00-00-00-00"
     private val client: HttpClient = HttpClient(Android) {
         install(HttpCookies)
         install(HttpTimeout)
     }
     private lateinit var crypter: Crypter
+    private var klapProtocol: KlapProtocol? = null
+    private var currentProtocol: ProtocolType? = null
 
     private var token: String?
 
-    val authenticated: Boolean get() = token != null
+    val authenticated: Boolean get() = token != null || klapProtocol != null
 
     init {
         this.token = null
@@ -50,6 +59,7 @@ class TapoClient {
 
     constructor(ipAddress: Inet4Address) {
         this.url = String.format("http://%s/app", ipAddress.hostAddress!!)
+        this.ipAddress = ipAddress
     }
 
     constructor(url: String) {
@@ -58,17 +68,33 @@ class TapoClient {
 
     suspend fun login(username: String, password: String) {
         Log.d(TAG, String.format("Performing login as %s", username))
+        
+        // Try KLAP protocol first (for newer firmware)
+        if (ipAddress != null) {
+            try {
+                Log.d(TAG, "Attempting KLAP protocol")
+                klapProtocol = KlapProtocol(client, ipAddress!!)
+                klapProtocol!!.handshake(username, password)
+                currentProtocol = ProtocolType.KLAP
+                Log.d(TAG, "KLAP protocol successful")
+                return
+            } catch (e: Exception) {
+                Log.w(TAG, "KLAP protocol failed, falling back to passthrough: ${e.message}")
+                klapProtocol = null
+                currentProtocol = null
+            }
+        }
+        
+        // Fall back to old passthrough protocol
+        Log.d(TAG, "Using passthrough protocol")
         handshake()
         doLogin(username, password)
+        currentProtocol = ProtocolType.PASSTHROUGH
     }
 
     suspend fun queryDevice(): Device {
         Log.d(TAG, "Getting device type")
-        val request = packRequest(GetDeviceInfoParams())
-
-        val response: TapoResponse<GenericDeviceInfoResult> = passthroughRequest(request)
-        validateResponse(response)
-        val deviceInfo = response.result!!
+        val deviceInfo = getDeviceInfo()
         val model = DeviceModel.fromName(deviceInfo.model)
         Log.d(
             DeviceScanner.TAG,
@@ -96,7 +122,7 @@ class TapoClient {
 
     suspend fun getDeviceInfo(): GenericDeviceInfoResult {
         val request = packRequest(GetDeviceInfoParams())
-        val response: TapoResponse<GenericDeviceInfoResult> = passthroughRequest(request)
+        val response: TapoResponse<GenericDeviceInfoResult> = executeRequest(request)
         validateResponse(response)
         return response.result!!
     }
@@ -105,7 +131,7 @@ class TapoClient {
         Log.d(TAG, String.format("Setting generic device info params: %s", params))
 
         val request = packRequest(params)
-        val response: TapoResponse<SetDeviceInfoResult> = passthroughRequest(request)
+        val response: TapoResponse<SetDeviceInfoResult> = executeRequest(request)
         validateResponse(response)
         Log.d(TAG, "Device info SET")
     }
@@ -114,7 +140,7 @@ class TapoClient {
         Log.d(TAG, String.format("Setting light bulb device info params: %s", params))
 
         val request = packRequest(params)
-        val response: TapoResponse<SetDeviceInfoResult> = passthroughRequest(request)
+        val response: TapoResponse<SetDeviceInfoResult> = executeRequest(request)
         validateResponse(response)
         Log.d(TAG, "Device info SET")
     }
@@ -123,7 +149,7 @@ class TapoClient {
         Log.d(TAG, String.format("Setting RGB device info params: %s", params))
 
         val request = packRequest(params)
-        val response: TapoResponse<SetDeviceInfoResult> = passthroughRequest(request)
+        val response: TapoResponse<SetDeviceInfoResult> = executeRequest(request)
         validateResponse(response)
         Log.d(TAG, "Device info SET")
     }
@@ -189,6 +215,25 @@ class TapoClient {
 
         val deserializer = Json { ignoreUnknownKeys = true }
         return deserializer.decodeFromString(response.body())
+    }
+
+    private suspend inline fun <reified T, reified U> executeRequest(request: TapoRequest<T>): U {
+        return when (currentProtocol) {
+            ProtocolType.KLAP -> klapRequest(request)
+            ProtocolType.PASSTHROUGH -> passthroughRequest(request)
+            null -> throw IllegalStateException("Not authenticated")
+        }
+    }
+
+    private suspend inline fun <reified T, reified U> klapRequest(request: TapoRequest<T>): U {
+        val serializer = Json { encodeDefaults = false }
+        val payload = serializer.encodeToString(request)
+        Log.d(TAG, String.format("Sending KLAP request: '%s'", payload))
+        
+        val responseStr = klapProtocol!!.executeRequest(payload)
+        
+        val deserializer = Json { ignoreUnknownKeys = true }
+        return deserializer.decodeFromString(responseStr)
     }
 
     private suspend inline fun <reified T, reified U> passthroughRequest(request: TapoRequest<T>): U {
