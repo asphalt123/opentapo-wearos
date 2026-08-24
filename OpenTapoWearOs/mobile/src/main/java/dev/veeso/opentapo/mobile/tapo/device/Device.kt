@@ -1,9 +1,9 @@
-package dev.veeso.opentapowearos.tapo.device
+package dev.veeso.opentapo.mobile.tapo.device
 
 import android.util.Log
-import dev.veeso.opentapowearos.tapo.api.tapo.TapoClient
-import dev.veeso.opentapowearos.tapo.api.tapo.request.params.SetGenericDeviceInfoParams
-import dev.veeso.opentapowearos.view.intent_data.Credentials
+import dev.veeso.opentapo.mobile.tapo.api.tapo.TapoClient
+import dev.veeso.opentapo.mobile.tapo.api.tapo.request.params.SetGenericDeviceInfoParams
+import dev.veeso.opentapo.mobile.view.intent_data.Credentials
 
 abstract class Device(
     deviceAlias: String,

@@ -172,7 +172,6 @@ class MainActivity : Activity() {
 
     private fun onReloadDeviceListClick() {
         Log.d(TAG, "onReloadDeviceList")
-        deleteCachedDeviceList()
         setActivityState(ActivityState.LOADING_DEVICE_LIST)
         GlobalScope.launch {
             withContext(Dispatchers.IO) {
@@ -239,6 +238,7 @@ class MainActivity : Activity() {
 
     private fun onCredentials() {
         try {
+            startPeriodicRefresh()
             val cachedDevices = getCachedDeviceAddressList()
             if (this.devices.isNotEmpty()) {
                 Log.d(TAG, "Credentials are set and devices too; reloading device state...")
@@ -259,37 +259,28 @@ class MainActivity : Activity() {
 
     private fun reloadDeviceState() {
         Log.d(TAG, "Reloading device state...")
-        this.devices.forEach {
-            GlobalScope.launch {
-                withContext(Dispatchers.IO) {
-                    if (!it.authenticated) {
-                        Log.d(
-                            TAG,
-                            String.format("Device %s is not authenticated yet; signin in", it.alias)
-                        )
+        val creds = this.credentials ?: return
+        GlobalScope.launch {
+            withContext(Dispatchers.IO) {
+                devices.map { device ->
+                    GlobalScope.async {
                         try {
-                            it.login(credentials!!.username, credentials!!.password)
+                            if (!device.authenticated) {
+                                Log.d(TAG, String.format("Device %s is not authenticated yet; signin in", device.alias))
+                                device.login(creds.username, creds.password)
+                            }
+                            Log.d(TAG, String.format("Getting device state for %s", device.alias))
+                            device.getDeviceStatus()
                         } catch (e: Exception) {
-                            e.printStackTrace()
-                            Log.e(TAG, String.format("Login failed on %s: %s", it.alias, e))
+                            Log.e(TAG, String.format("Failed to get device state for %s: %s", device.alias, e))
                         }
                     }
-                    try {
-                        Log.d(TAG, String.format("Getting device state for %s", it.alias))
-                        it.getDeviceStatus()
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                        Log.e(
-                            TAG,
-                            String.format("Failed to get device state for %s: %s", it.alias, e)
-                        )
-                    }
-                }
-                if (devices.isNotEmpty()) {
-                    setActivityState(ActivityState.DEVICE_LIST)
-                } else {
-                    setActivityState(ActivityState.NO_DEVICE_FOUND)
-                }
+                }.awaitAll()
+            }
+            if (devices.isNotEmpty()) {
+                setActivityState(ActivityState.DEVICE_LIST)
+            } else {
+                setActivityState(ActivityState.NO_DEVICE_FOUND)
             }
         }
     }
@@ -306,14 +297,27 @@ class MainActivity : Activity() {
         Log.d(TAG, "discoverDevices")
         GlobalScope.launch {
             withContext(Dispatchers.IO) {
-                devices.clear()
-                // check what kind of scan we need to make
+                // keep the current list until a scan produces results; never wipe
+                // devices on a failed scan (fixes disappearing devices)
+                val previousDevices = devices.toList()
                 val cachedDeviceList = getCachedDeviceAddressList()
                 if ((cachedDeviceList == null || cachedDeviceList.isEmpty()) && deviceNetwork == null) {
                     // do scan with wifi
                     discoverDevicesOnLocalNetworkWithWifi()
                 } else {
-                    discoverDevicesOnLocalNetwork()
+                    try {
+                        discoverDevicesOnLocalNetwork()
+                    } catch (e: Exception) {
+                        Log.e(TAG, String.format("Scan failed: %s; keeping %d known devices", e, previousDevices.size))
+                        this@MainActivity.devices.clear()
+                        this@MainActivity.devices.addAll(previousDevices)
+                        if (devices.isNotEmpty()) {
+                            setActivityState(ActivityState.DEVICE_LIST)
+                            reloadDeviceState()
+                        } else {
+                            setActivityState(ActivityState.NO_DEVICE_FOUND)
+                        }
+                    }
                 }
             }
         }
@@ -321,22 +325,46 @@ class MainActivity : Activity() {
 
     private fun discoverDevicesOnLocalNetwork() {
         Log.d(TAG, "discoverDevicesOnLocalNetwork")
+        val previousDevices = this.devices.toList()
         val cachedDeviceList = getCachedDeviceAddressList()
-        this.devices = if (cachedDeviceList != null && cachedDeviceList.isNotEmpty()) {
-            Log.d(TAG, String.format("Found %d cached devices for scanner", cachedDeviceList.size))
-            Log.d(TAG, "Creating device list from cached devices")
-            cachedDeviceList.toMutableList()
-        } else {
-            Log.d(TAG, "Getting local address")
-            Log.d(TAG, "Running ip discovery service")
-            val scanner = DeviceScanner(
-                credentials!!.username,
-                credentials!!.password
-            )
-            scanner.scanNetwork(deviceNetwork!!.first, deviceNetwork!!.second)
-            scanner.devices
+        // Always run a live network scan; use cached/known devices as fallback
+        // so nothing disappears when a device is temporarily unreachable or
+        // its DHCP lease changed.
+        val knownDevices = (previousDevices + (cachedDeviceList ?: emptyList()))
+            .distinctBy { it.id }
+        Log.d(TAG, String.format("Known devices before scan: %d", knownDevices.size))
+        val scanner = DeviceScanner(
+            credentials!!.username,
+            credentials!!.password
+        )
+        val network = deviceNetwork
+        if (network == null) {
+            throw Exception("No link")
         }
-        Log.d(TAG, String.format("Found %d devices", this.devices.size))
+        try {
+            scanner.scanNetwork(network.first, network.second)
+        } catch (e: Exception) {
+            Log.e(TAG, String.format("Live scan failed: %s", e))
+        }
+        val scanned = scanner.devices
+        Log.d(TAG, String.format("Scan found %d devices; merging with %d known", scanned.size, knownDevices.size))
+        // merge: scanned (fresh state) wins over known entries with same id;
+        // keep known devices not found in the scan (offline or IP changed)
+        val merged = mutableListOf<Device>()
+        val seenIds = mutableSetOf<String>()
+        scanned.forEach { scanned_device ->
+            merged.add(scanned_device)
+            seenIds.add(scanned_device.id)
+        }
+        knownDevices.forEach { known ->
+            if (!seenIds.contains(known.id)) {
+                merged.add(known)
+                seenIds.add(known.id)
+            }
+        }
+        this.devices.clear()
+        this.devices.addAll(merged)
+        Log.d(TAG, String.format("Found %d devices after merge", this.devices.size))
         // cache devices
         setCachedDeviceList()
         // set activity state
@@ -383,22 +411,28 @@ class MainActivity : Activity() {
         val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE)
 
         if (connectivityManager is ConnectivityManager) {
-            val networks =
-                connectivityManager.allNetworks.map { (connectivityManager.getLinkProperties(it) as LinkProperties) }
-            val link: LinkProperties = networks[networks.size - 1]
-            Log.d(TAG, link.linkAddresses.toString())
-            val ipAddress = link.linkAddresses[1].address as Inet4Address
-            val netmask = NetworkUtils.cidrToNetmask(link.linkAddresses[1].prefixLength)
-            Log.d(
-                TAG,
-                String.format(
-                    "Found local device address %s and netmask %s",
-                    ipAddress.hostAddress,
-                    netmask
-                )
-            )
-            // return Pair("192.168.178.23", "255.255.255.0")
-            return Pair(ipAddress.hostAddress!!, netmask)
+            val networks = connectivityManager.allNetworks
+            // pick the first network that has an IPv4 link address (the old code
+            // blindly took the last network and address index 1, which crashes
+            // or returns the wrong interface depending on device setup)
+            for (network in networks) {
+                val link = connectivityManager.getLinkProperties(network) ?: continue
+                for (linkAddress in link.linkAddresses) {
+                    val address = linkAddress.address
+                    if (address is Inet4Address) {
+                        val netmask = NetworkUtils.cidrToNetmask(linkAddress.prefixLength)
+                        Log.d(
+                            TAG,
+                            String.format(
+                                "Found local device address %s and netmask %s",
+                                address.hostAddress,
+                                netmask
+                            )
+                        )
+                        return Pair(address.hostAddress!!, netmask)
+                    }
+                }
+            }
         }
 
         throw Exception("No link")
@@ -760,11 +794,24 @@ class MainActivity : Activity() {
 
     companion object {
         const val TAG = "MainActivity"
+        const val DEVICE_STATE_REFRESH_MS = 15000L
         const val SHARED_PREFS = "OpenTapoWearOs"
         const val SHARED_PREFS_USERNAME = "username"
         const val SHARED_PREFS_PASSWORD = "password"
         const val SHARED_PREFS_CACHED_DEVICES = "cachedDeviceList"
         const val SHARED_PREFS_DEVICE_GROUPS = "deviceGroups"
+    }
+
+    private fun startPeriodicRefresh() {
+        GlobalScope.launch {
+            while (isActive && credentials != null) {
+                delay(DEVICE_STATE_REFRESH_MS)
+                if (state == ActivityState.DEVICE_LIST) {
+                    Log.d(TAG, "Periodic device state refresh")
+                    reloadDeviceState()
+                }
+            }
+        }
     }
 
 }

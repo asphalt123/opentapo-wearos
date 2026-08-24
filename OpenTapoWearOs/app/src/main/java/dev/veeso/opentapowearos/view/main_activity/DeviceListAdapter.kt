@@ -1,6 +1,8 @@
 package dev.veeso.opentapowearos.view.main_activity
 
 import android.graphics.Color
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -8,7 +10,6 @@ import android.view.ViewGroup
 import android.widget.Switch
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import dev.veeso.opentapowearos.DeviceActivity
 import dev.veeso.opentapowearos.R
 import dev.veeso.opentapowearos.tapo.device.Device
 import dev.veeso.opentapowearos.view.intent_data.Credentials
@@ -23,6 +24,9 @@ internal class DeviceListAdapter(private val devices: List<Device>) :
     var selected: Boolean = false
     lateinit var credentials: Credentials
 
+    private var suppressListener = false
+    private val mainHandler = Handler(Looper.getMainLooper())
+
     internal inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val deviceAliasText: TextView = view.findViewById(R.id.device_list_item_alias)
         val deviceModelText: TextView = view.findViewById(R.id.device_list_item_model)
@@ -30,11 +34,28 @@ internal class DeviceListAdapter(private val devices: List<Device>) :
 
         init {
             itemView.setOnClickListener {
-                onItemClick?.invoke(devices[bindingAdapterPosition])
+                val position = bindingAdapterPosition
+                if (position != RecyclerView.NO_POSITION) {
+                    onItemClick?.invoke(devices[position])
+                }
             }
             itemView.setOnLongClickListener {
-                onLongClick(it, bindingAdapterPosition)
+                val position = bindingAdapterPosition
+                if (position != RecyclerView.NO_POSITION) {
+                    onLongClick(it, position)
+                }
                 true
+            }
+            devicePowerSwitch.setOnCheckedChangeListener { _, isChecked ->
+                val position = bindingAdapterPosition
+                if (position == RecyclerView.NO_POSITION || suppressListener) {
+                    return@setOnCheckedChangeListener
+                }
+                Log.d(
+                    TAG,
+                    String.format("Changing power state for %s to %s", devices[position].alias, isChecked)
+                )
+                setPowerState(devices[position], isChecked, this)
             }
         }
     }
@@ -49,15 +70,11 @@ internal class DeviceListAdapter(private val devices: List<Device>) :
         val device = devices[position]
         holder.deviceAliasText.text = device.alias
         holder.deviceModelText.text = device.model.toString()
-        // power switch
+        // power switch (suppress listener to avoid firing during rebinding)
+        suppressListener = true
         holder.devicePowerSwitch.isChecked = device.status.deviceOn
-        holder.devicePowerSwitch.setOnCheckedChangeListener { _, isChecked ->
-            Log.d(
-                DeviceActivity.TAG,
-                String.format("Changing power state for %s to %s", device.alias, isChecked)
-            )
-            setPowerState(device, isChecked)
-        }
+        holder.devicePowerSwitch.alpha = if (device.status.deviceOn) 1f else 0.6f
+        suppressListener = false
     }
 
     override fun getItemCount(): Int {
@@ -76,7 +93,7 @@ internal class DeviceListAdapter(private val devices: List<Device>) :
         onItemLongClick?.invoke(devices[adapterPosition])
     }
 
-    private fun setPowerState(device: Device, powerState: Boolean) {
+    fun setPowerState(device: Device, powerState: Boolean, holder: ViewHolder) {
         GlobalScope.launch {
             withContext(Dispatchers.IO) {
                 try {
@@ -89,11 +106,20 @@ internal class DeviceListAdapter(private val devices: List<Device>) :
                     } else {
                         device.off()
                     }
+                    // confirm optimistic state locally so a rebind keeps it
+                    device.status = device.status.copy(deviceOn = powerState)
                 } catch (e: Exception) {
                     Log.d(
                         TAG,
                         String.format("Failed to set power state for %s: %s", device.alias, e)
                     )
+                    // revert the switch on failure
+                    mainHandler.post {
+                        suppressListener = true
+                        holder.devicePowerSwitch.isChecked = !powerState
+                        holder.devicePowerSwitch.alpha = if (!powerState) 1f else 0.6f
+                        suppressListener = false
+                    }
                 }
             }
         }

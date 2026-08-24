@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="op_background">#FF101418</color>
+    <color name="op_surface">#FF1A2028</color>
+    <color name="op_primary">#FF2D7DF6</color>
+    <color name="op_accent">#FF4FC3F7</color>
+    <color name="op_on">#FF66BB6A</color>
+    <color name="op_text_primary">#FFF2F5F7</color>
+    <color name="op_text_secondary">#FF9AA7B4</color>
+</resources>
