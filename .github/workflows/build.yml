@@ -1,0 +1,74 @@
+name: Build & Release APKs
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Decode signing keystore
+        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        shell: bash
+        run: |
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$GITHUB_WORKSPACE/release.keystore"
+
+      - name: Build Wear OS APK (release)
+        working-directory: OpenTapoWearOs
+        env:
+          KEYSTORE_FILE: ${{ github.workspace }}/release.keystore
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: ./gradlew :app:assembleRelease --no-daemon
+
+      - name: Build Mobile companion APK (release)
+        working-directory: OpenTapoWearOs
+        env:
+          KEYSTORE_FILE: ${{ github.workspace }}/release.keystore
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: ./gradlew :mobile:assembleRelease --no-daemon
+
+      - name: Rename APKs
+        run: |
+          VERSION="${GITHUB_REF_NAME:-snapshot}"
+          cp OpenTapoWearOs/app/build/outputs/apk/release/app-release.apk \
+             "opentapo-wearos-${VERSION}.apk" || echo "wearos apk not found"
+          cp OpenTapoWearOs/mobile/build/outputs/apk/release/mobile-release.apk \
+             "opentapo-mobile-${VERSION}.apk" || echo "mobile apk not found"
+          ls -la *.apk || true
+
+      - name: Create GitHub Release and upload APKs
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            opentapo-wearos-*.apk
+            opentapo-mobile-*.apk
+          generate_release_notes: true
+
+      - name: Upload artifacts (manual runs)
+        if: github.ref_type != 'tag'
+        uses: actions/upload-artifact@v4
+        with:
+          name: apks
+          path: '*.apk'
