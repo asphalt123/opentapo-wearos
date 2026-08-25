@@ -103,11 +103,18 @@ class MainActivity : AppCompatActivity() {
         scope.launch {
             try {
                 val network = withContext(Dispatchers.IO) { localNetwork() }
+                Log.i(TAG, "Scanning subnet: $network")
+                if (network == null) {
+                    Toast.makeText(this@MainActivity,
+                        "Pas de réseau Wi-Fi détecté — vérifie que le téléphone est en Wi-Fi",
+                        Toast.LENGTH_LONG).show()
+                }
                 val scanned = withContext(Dispatchers.IO) {
                     val scanner = DeviceScanner(creds.username, creds.password)
                     network?.let { scanner.scanNetwork(it.first, it.second) }
                     scanner.devices
                 }
+                Log.i(TAG, "Scan complete: ${scanned.size} device(s) found")
                 devices.clear()
                 devices.addAll(scanned.sortedBy { it.alias })
                 adapter.notifyDataSetChanged()
@@ -126,16 +133,24 @@ class MainActivity : AppCompatActivity() {
     /** Returns (ip, netmask) of the wifi network, or null when unavailable. */
     private fun localNetwork(): Pair<String, String>? {
         val cm = getSystemService(CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
+        // Prefer the network that actually carries internet over WIFI transport;
+        // allNetworks order is arbitrary and the first IPv4 may belong to a VPN
+        // or the cellular interface, which would scan the wrong subnet.
+        val candidates = mutableListOf<Pair<Int, Pair<String, String>>>()
         for (network in cm.allNetworks) {
+            val caps = cm.getNetworkCapabilities(network) ?: continue
             val link = cm.getLinkProperties(network) ?: continue
+            var score = 0
+            if (caps.hasTransport(android.net.NetworkCapabilities.TRANSPORT_WIFI)) score += 10
+            if (caps.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET)) score += 5
             for (la in link.linkAddresses) {
                 val addr = la.address
                 if (addr is Inet4Address && !addr.isLoopbackAddress) {
-                    return Pair(addr.hostAddress!!, NetworkUtils.cidrToNetmask(la.prefixLength))
+                    candidates.add(Pair(score, Pair(addr.hostAddress!!, NetworkUtils.cidrToNetmask(la.prefixLength))))
                 }
             }
         }
-        return null
+        return candidates.maxByOrNull { it.first }?.second
     }
 
     private fun toggleDevice(device: Device, newState: Boolean) {
