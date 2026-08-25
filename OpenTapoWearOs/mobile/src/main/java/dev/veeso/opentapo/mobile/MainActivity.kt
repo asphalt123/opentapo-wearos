@@ -43,6 +43,12 @@ class MainActivity : AppCompatActivity() {
                     logout()
                     true
                 }
+                R.id.action_add_ip -> {
+                    val intent = Intent(this, AddDeviceActivity::class.java)
+                    intent.putExtra(AddDeviceActivity.EXTRA_CREDENTIALS, credentials)
+                    startActivityForResult(intent, REQUEST_ADD_DEVICE)
+                    true
+                }
                 else -> false
             }
         }
@@ -76,6 +82,31 @@ class MainActivity : AppCompatActivity() {
         if (credentials != null && devices.isNotEmpty()) {
             discover()
         }
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_ADD_DEVICE && resultCode == RESULT_OK) {
+            val ip = data?.getStringExtra(AddDeviceActivity.EXTRA_DEVICE_IP)
+            if (ip != null) {
+                saveManualIp(ip)
+                discover()
+            }
+        }
+    }
+
+    /** Manually-added IPs are merged into every future scan result. */
+    private fun saveManualIp(ip: String) {
+        val prefs = getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val existing = prefs.getStringSet(KEY_MANUAL_IPS, mutableSetOf()) ?: mutableSetOf()
+        existing.add(ip)
+        prefs.edit().putStringSet(KEY_MANUAL_IPS, existing).apply()
+    }
+
+    private fun loadManualIps(): Set<String> {
+        return getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getStringSet(KEY_MANUAL_IPS, emptySet()) ?: emptySet()
     }
 
     override fun onDestroy() {
@@ -112,6 +143,22 @@ class MainActivity : AppCompatActivity() {
                 val scanned = withContext(Dispatchers.IO) {
                     val scanner = DeviceScanner(creds.username, creds.password)
                     network?.let { scanner.scanNetwork(it.first, it.second) }
+                    // add manually-registered devices that the scan may have missed
+                    val manualIps = loadManualIps()
+                    val found = scanner.devices.map { it.ipAddress }.toSet()
+                    for (ip in manualIps) {
+                        if (!found.contains(ip)) {
+                            try {
+                                val addr = java.net.InetAddress.getByName(ip) as Inet4Address
+                                val client = dev.veeso.opentapo.mobile.tapo.api.tapo.TapoClient(addr)
+                                client.login(creds.username, creds.password)
+                                scanner.devices.add(client.queryDevice())
+                                Log.i(TAG, "Manual device at $ip reachable again")
+                            } catch (e: Exception) {
+                                Log.w(TAG, "Manual device at $ip unreachable: ${e.message}")
+                            }
+                        }
+                    }
                     scanner.devices
                 }
                 Log.i(TAG, "Scan complete: ${scanned.size} device(s) found")
@@ -187,5 +234,7 @@ class MainActivity : AppCompatActivity() {
         const val PREFS = "OpenTapo"
         const val KEY_USER = "username"
         const val KEY_PASS = "password"
+        const val KEY_MANUAL_IPS = "manual_ips"
+        const val REQUEST_ADD_DEVICE = 2
     }
 }

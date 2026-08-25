@@ -9,6 +9,12 @@
     <string name="no_devices">Aucun appareil trouvé.\nVérifie que le téléphone est sur le même réseau Wi-Fi que tes prises.</string>
     <string name="refresh">Actualiser</string>
     <string name="logout">Déconnexion</string>
+    <string name="add_by_ip">Ajouter par IP</string>
+    <string name="add_device_title">Ajouter un appareil</string>
+    <string name="add_device_hint">Entre l\'adresse IP locale de ta prise/lumière Tapo. Tu la trouveras dans l\'app Tapo officielle : appareil → icône engrenage.</string>
+    <string name="add_device_ip_hint">Adresse IP (ex: 192.168.1.140)</string>
+    <string name="add_device_button">Ajouter</string>
+    <string name="compatibility_disclaimer">⚠️ Pour que l\'app fonctionne, active la « Compatibilité des appareils tiers » dans l\'app Tapo officielle (Profil → Paramètres). Sans ça, les connexions locales sont refusées par les prises récentes.</string>
     <string name="error_generic">Une erreur est survenue : %1$s</string>
     <string name="state_on">Allumé</string>
     <string name="state_off">Éteint</string>
