@@ -23,23 +23,24 @@ class DeviceScanner(username: String, password: String) {
     }
 
     private fun doScanNetwork(addressToFetch: List<Inet4Address>) {
-        val scanners = addressToFetch.map {
-            DeviceScannerWorker(it, username, password)
+        // bounded thread pool: spawning 250+ threads at once can starve a
+        // low-power device before the scan completes
+        val workers = addressToFetch.map { DeviceScannerWorker(it, username, password) }
+        val threads = workers.map {
+            Thread(it).also { t ->
+                t.priority = Thread.MIN_PRIORITY
+                t.start()
+            }
         }
-        // start threads
-        Log.d(TAG, String.format("Starting %d workers", scanners.size))
-        val jobs = scanners.map {
-            val t = Thread(it)
-            t.start()
-            t
-        }
-        // join workers
-        Log.d(TAG, "Joining workers")
-        jobs.forEach {
-            it.join()
+        var started = 0
+        while (started < threads.size) {
+            val batch = threads.subList(started, minOf(started + MAX_CONCURRENT_THREADS, threads.size))
+            batch.forEach { it.join() }
+            started += batch.size
+            Log.d(TAG, String.format("Scan progress: %d/%d addresses probed", started, threads.size))
         }
         // get devices
-        scanners.forEach {
+        workers.forEach {
             if (it.device != null) {
                 this.devices.add(it.device!!)
             }
@@ -67,5 +68,6 @@ class DeviceScanner(username: String, password: String) {
 
     companion object {
         const val TAG = "IpFinder"
+        const val MAX_CONCURRENT_THREADS = 32
     }
 }
