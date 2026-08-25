@@ -119,6 +119,13 @@ class MainActivity : AppCompatActivity() {
                 devices.addAll(scanned.sortedBy { it.alias })
                 adapter.notifyDataSetChanged()
                 emptyView.visibility = if (devices.isEmpty()) View.VISIBLE else View.GONE
+                if (devices.isEmpty()) {
+                    Toast.makeText(this@MainActivity,
+                        "Aucune prise trouvée sur ${network ?: "?"}. " +
+                        "Vérifie que la compatibilité tierce est activée dans l'app Tapo " +
+                        "(Profil → Paramètres → Compatibilité appareils tiers).",
+                        Toast.LENGTH_LONG).show()
+                }
             } catch (e: Exception) {
                 Log.e(TAG, "Discovery failed", e)
                 Toast.makeText(this@MainActivity, getString(R.string.error_generic, e.message), Toast.LENGTH_LONG).show()
