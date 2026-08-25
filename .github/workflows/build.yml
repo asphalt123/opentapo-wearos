@@ -21,6 +21,13 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
+        with:
+          # prevent setup-gradle from pre-starting a daemon with the runner's
+          # default JVM (Java 11) instead of the JDK 17 above
+          dependency-graph: disable
+
+      - name: Verify Java version
+        run: java -version
 
       - name: Decode signing keystore
         env:
