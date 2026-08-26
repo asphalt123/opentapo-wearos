@@ -44,4 +44,5 @@
     <string name="device_setup_activity_error_handhshake_failed">Could not configure host as a Tapo device</string>
     <string name="device_setup_activity_loading_reachable">Trying to connect to provided host</string>
     <string name="device_setup_activity_loading_setup">Trying to setup device</string>
+    <string name="device_setup_activity_disclaimer">Requires "Third-Party Compatibility" enabled in the official Tapo app (Profile → Settings). Without it, devices refuse local connections.</string>
 </resources>

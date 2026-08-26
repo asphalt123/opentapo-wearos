@@ -20,6 +20,7 @@ import dev.veeso.opentapowearos.databinding.ActivityMainBinding
 import dev.veeso.opentapowearos.net.DeviceScanner
 import dev.veeso.opentapowearos.net.NetworkUtils
 import dev.veeso.opentapowearos.tapo.api.tplinkcloud.TpLinkCloudClient
+import dev.veeso.opentapowearos.tapo.api.tapo.TapoClient
 import dev.veeso.opentapowearos.tapo.device.Device
 import dev.veeso.opentapowearos.tapo.device.DeviceBuilder
 import dev.veeso.opentapowearos.view.app_data.DeviceCache
@@ -152,7 +153,7 @@ class MainActivity : Activity() {
     }
 
     private fun onDeviceSetupActivityResult(deviceData: DeviceData) {
-        Log.d(TAG, String.format("Got DeviceSetup activity result: %s", deviceData))
+        Log.d(TAG, String.format("Got DeviceSetup result: %s", deviceData))
         // convert device data to device
         val device = DeviceBuilder.buildDevice(
             alias = deviceData.alias,
@@ -165,9 +166,29 @@ class MainActivity : Activity() {
         // check if device already exists
         if (this.devices.all { it.id != device.id }) {
             this.devices.add(device)
-            setCachedDeviceList()
-            setActivityState(ActivityState.DEVICE_LIST)
+        } else {
+            // replace existing entry with fresh state (IP may have changed)
+            val idx = this.devices.indexOfFirst { it.id == device.id }
+            if (idx >= 0) {
+                this.devices[idx] = device
+            }
         }
+        saveManualIp(device.ipAddress)
+        setCachedDeviceList()
+        setActivityState(ActivityState.DEVICE_LIST)
+    }
+
+    /** Manually-registered IPs survive failed scans and are re-checked on reload. */
+    private fun saveManualIp(ip: String) {
+        val sharedPrefs = getSharedPreferences(SHARED_PREFS, Context.MODE_PRIVATE)
+        val existing = sharedPrefs.getStringSet(SHARED_PREFS_MANUAL_IPS, mutableSetOf()) ?: mutableSetOf()
+        existing.add(ip)
+        sharedPrefs.edit().putStringSet(SHARED_PREFS_MANUAL_IPS, existing).apply()
+    }
+
+    private fun loadManualIps(): Set<String> {
+        return getSharedPreferences(SHARED_PREFS, Context.MODE_PRIVATE)
+            .getStringSet(SHARED_PREFS_MANUAL_IPS, emptySet()) ?: emptySet()
     }
 
     private fun onReloadDeviceListClick() {
@@ -360,6 +381,23 @@ class MainActivity : Activity() {
             if (!seenIds.contains(known.id)) {
                 merged.add(known)
                 seenIds.add(known.id)
+            }
+        }
+        // re-check manually-registered devices the scan may have missed
+        val foundIps = scanned.map { it.ipAddress }.toSet()
+        runBlocking {
+            for (ip in loadManualIps()) {
+                if (!foundIps.contains(ip) && merged.none { it.ipAddress == ip }) {
+                    try {
+                        val addr = java.net.InetAddress.getByName(ip) as Inet4Address
+                        val client = TapoClient(addr)
+                        client.login(credentials!!.username, credentials!!.password)
+                        merged.add(client.queryDevice())
+                        Log.d(TAG, String.format("Manual device at %s reachable again", ip))
+                    } catch (e: Exception) {
+                        Log.w(TAG, String.format("Manual device at %s unreachable: %s", ip, e.message))
+                    }
+                }
             }
         }
         this.devices.clear()
@@ -800,6 +838,7 @@ class MainActivity : Activity() {
         const val SHARED_PREFS_PASSWORD = "password"
         const val SHARED_PREFS_CACHED_DEVICES = "cachedDeviceList"
         const val SHARED_PREFS_DEVICE_GROUPS = "deviceGroups"
+        const val SHARED_PREFS_MANUAL_IPS = "manualIps"
     }
 
     private fun startPeriodicRefresh() {
