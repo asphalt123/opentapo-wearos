@@ -26,7 +26,7 @@ class DataLayerListenerService : WearableListenerService() {
         super.onDestroy()
     }
 
-    override fun onBind(intent: Intent?): IBinder? {
+    override fun onBind(intent: Intent): IBinder? {
         Log.d(TAG, "DataLayerListenerService onBind")
         return super.onBind(intent)
     }
