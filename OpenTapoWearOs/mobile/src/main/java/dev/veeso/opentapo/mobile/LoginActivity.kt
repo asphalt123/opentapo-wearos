@@ -42,6 +42,7 @@ class LoginActivity : AppCompatActivity() {
                         .putString(MainActivity.KEY_PASS, pass)
                         .apply()
                     SyncHelper.sendCredentialsToWear(this@LoginActivity, user, pass)
+                    SyncHelper.sendCredentialsToWearViaMessage(this@LoginActivity, user, pass)
                     startActivity(Intent(this@LoginActivity, MainActivity::class.java))
                     finish()
                 } catch (e: Exception) {
@@ -52,6 +53,7 @@ class LoginActivity : AppCompatActivity() {
                         .putString(MainActivity.KEY_PASS, pass)
                         .apply()
                     SyncHelper.sendCredentialsToWear(this@LoginActivity, user, pass)
+                    SyncHelper.sendCredentialsToWearViaMessage(this@LoginActivity, user, pass)
                     startActivity(Intent(this@LoginActivity, MainActivity::class.java))
                     finish()
                 }
