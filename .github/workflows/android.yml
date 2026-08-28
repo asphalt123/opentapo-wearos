@@ -1,6 +1,10 @@
 name: Android CI
 
-on: [push, pull_request]
+# Ne plus builder à chaque push (évite le spam GitHub sur la branche improvements).
+# Build déclenché uniquement sur PR ou manuellement.
+on:
+  pull_request:
+  workflow_dispatch:
 
 jobs:
   build:
