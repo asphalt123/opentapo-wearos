@@ -2,6 +2,7 @@ package dev.veeso.opentapo.mobile
 
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
@@ -11,6 +12,10 @@ import dev.veeso.opentapo.mobile.tapo.api.tplinkcloud.TpLinkCloudClient
 import kotlinx.coroutines.*
 
 class LoginActivity : AppCompatActivity() {
+
+    companion object {
+        private const val TAG = "LoginActivity"
+    }
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
@@ -43,6 +48,7 @@ class LoginActivity : AppCompatActivity() {
                         .apply()
                     SyncHelper.sendCredentialsToWear(this@LoginActivity, user, pass)
                     SyncHelper.sendCredentialsToWearViaMessage(this@LoginActivity, user, pass)
+                    Log.d(TAG, "SyncHelper calls done after login")
                     startActivity(Intent(this@LoginActivity, MainActivity::class.java))
                     finish()
                 } catch (e: Exception) {
@@ -54,6 +60,7 @@ class LoginActivity : AppCompatActivity() {
                         .apply()
                     SyncHelper.sendCredentialsToWear(this@LoginActivity, user, pass)
                     SyncHelper.sendCredentialsToWearViaMessage(this@LoginActivity, user, pass)
+                    Log.d(TAG, "SyncHelper calls done after login")
                     startActivity(Intent(this@LoginActivity, MainActivity::class.java))
                     finish()
                 }
