@@ -5,7 +5,9 @@ import android.util.Log
 import com.google.android.gms.wearable.DataEvent
 import com.google.android.gms.wearable.DataEventBuffer
 import com.google.android.gms.wearable.DataMapItem
+import com.google.android.gms.wearable.MessageEvent
 import com.google.android.gms.wearable.WearableListenerService
+import java.nio.charset.Charsets
 
 class DataLayerListenerService : WearableListenerService() {
 
@@ -40,6 +42,28 @@ class DataLayerListenerService : WearableListenerService() {
                         Log.e(TAG, "Error processing credentials data item", e)
                     }
                 }
+            }
+        }
+    }
+
+    override fun onMessageReceived(messageEvent: MessageEvent) {
+        if (messageEvent.path == "/opentapo/credentials") {
+            try {
+                val payload = String(messageEvent.data, Charsets.UTF_8)
+                val parts = payload.split("\n")
+                if (parts.size >= 2) {
+                    val username = parts[0]
+                    val password = parts[1]
+                    getSharedPreferences("OpenTapoWearOs", MODE_PRIVATE).edit()
+                        .putString("username", username)
+                        .putString("password", password)
+                        .apply()
+                    val intent = Intent(this, MainActivity::class.java)
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                    startActivity(intent)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error processing credentials message", e)
             }
         }
     }
