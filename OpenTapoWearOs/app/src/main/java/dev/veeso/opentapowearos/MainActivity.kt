@@ -301,8 +301,10 @@ class MainActivity : Activity() {
                 val client = Wearable.getDataClient(this@MainActivity)
                 val uri = Uri.parse("wear://*/opentapo/credentials")
                 val buffer = Tasks.await(client.getDataItems(uri))
+                Log.d(TAG, "getDataItems returned count=${buffer.count}")
                 try {
                     for (item in buffer) {
+                        Log.d(TAG, "pull item path=${item.uri.path}")
                         if (item.uri.path == "/opentapo/credentials") {
                             val dm = DataMapItem.fromDataItem(item).dataMap
                             val username = dm.getString("username")
