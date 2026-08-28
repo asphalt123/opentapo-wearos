@@ -1,7 +1,6 @@
 package dev.veeso.opentapowearos
 
 import android.content.Intent
-import android.os.IBinder
 import android.util.Log
 import com.google.android.gms.wearable.DataEvent
 import com.google.android.gms.wearable.DataEventBuffer
@@ -24,11 +23,6 @@ class DataLayerListenerService : WearableListenerService() {
     override fun onDestroy() {
         Log.d(TAG, "DataLayerListenerService onDestroy")
         super.onDestroy()
-    }
-
-    override fun onBind(intent: Intent): IBinder? {
-        Log.d(TAG, "DataLayerListenerService onBind")
-        return super.onBind(intent)
     }
 
     override fun onDataChanged(events: DataEventBuffer) {
