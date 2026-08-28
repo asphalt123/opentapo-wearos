@@ -18,6 +18,9 @@ import android.widget.ScrollView
 import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.gms.tasks.Tasks
+import com.google.android.gms.wearable.DataMapItem
+import com.google.android.gms.wearable.Wearable
 import dev.veeso.opentapowearos.databinding.ActivityMainBinding
 import dev.veeso.opentapowearos.net.DeviceScanner
 import dev.veeso.opentapowearos.net.NetworkUtils
@@ -268,15 +271,69 @@ class MainActivity : Activity() {
         // try to read from prefs
         readCredentialsFromPrefs()
 
-        // if still NULL; try to read from intent
+        // if still NULL; try to pull from Wear Data Layer before falling back to LoginActivity
         if (this.credentials != null) {
             onCredentials()
         } else {
             Log.d(
                 TAG,
-                "Credentials not in intent and not in preferences. Starting LoginActivity"
+                "Credentials not in intent and not in preferences. Trying to pull from Wear data layer."
             )
-            startActivityForResult(Intent(this, LoginActivity::class.java), 1)
+            pullCredentialsFromDataLayer()
+        }
+    }
+
+    /**
+     * Pulls credentials directly from the Wear Data Layer by querying for the
+     * pre-existing DataItem at path `/opentapo/credentials`.
+     *
+     * This handles the case where the phone pushed the credentials *before* the
+     * watch app was opened. In that scenario the DataItem is already present on
+     * the watch node, so `onDataChanged` (driven by `DataLayerListenerService`)
+     * never fires — there is no CHANGE to report. By querying `getDataItems()`
+     * we retrieve the already-synced item at startup.
+     */
+    private fun pullCredentialsFromDataLayer() {
+        Log.d(TAG, "Pulling credentials from Wear Data Layer")
+        GlobalScope.launch(Dispatchers.IO) {
+            var found = false
+            try {
+                val client = Wearable.getDataClient(this@MainActivity)
+                val uri = Uri.parse("wear://*/opentapo/credentials")
+                val buffer = Tasks.await(client.getDataItems(uri))
+                try {
+                    for (item in buffer) {
+                        if (item.uri.path == "/opentapo/credentials") {
+                            val dm = DataMapItem.fromDataItem(item).dataMap
+                            val username = dm.getString("username")
+                            val password = dm.getString("password")
+                            if (!username.isNullOrEmpty() && !password.isNullOrEmpty()) {
+                                this@MainActivity.credentials = Credentials(username, password)
+                                found = true
+                                runOnUiThread { onCredentials() }
+                                break
+                            }
+                        }
+                    }
+                } finally {
+                    buffer.close()
+                }
+                if (!found) {
+                    runOnUiThread {
+                        Log.d(TAG, "No credentials found in Data Layer; starting LoginActivity")
+                        startActivityForResult(
+                            Intent(this@MainActivity, LoginActivity::class.java), 1
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to pull credentials from Wear Data Layer: $e")
+                runOnUiThread {
+                    startActivityForResult(
+                        Intent(this@MainActivity, LoginActivity::class.java), 1
+                    )
+                }
+            }
         }
     }
 
