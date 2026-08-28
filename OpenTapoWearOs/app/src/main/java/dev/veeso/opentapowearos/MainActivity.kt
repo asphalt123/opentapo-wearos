@@ -2,8 +2,10 @@ package dev.veeso.opentapowearos
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.net.*
 import android.os.Bundle
 import android.util.Log
@@ -38,6 +40,18 @@ class MainActivity : Activity() {
 
     private lateinit var binding: ActivityMainBinding
 
+    private val credentialsReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            val prefs = getSharedPreferences(SHARED_PREFS, Context.MODE_PRIVATE)
+            val username = prefs.getString(SHARED_PREFS_USERNAME, "")
+            val password = prefs.getString(SHARED_PREFS_PASSWORD, "")
+            if (!username.isNullOrEmpty() && !password.isNullOrEmpty()) {
+                credentials = Credentials(username, password)
+            }
+            onCredentials()
+        }
+    }
+
     // credentials
     private var credentials: Credentials? = null
 
@@ -59,6 +73,15 @@ class MainActivity : Activity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        registerReceiver(
+            credentialsReceiver,
+            IntentFilter("dev.veeso.opentapowearos.CREDENTIALS_UPDATED")
+        )
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        unregisterReceiver(credentialsReceiver)
     }
 
     override fun onResume() {
