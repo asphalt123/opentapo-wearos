@@ -35,7 +35,7 @@ class DataLayerListenerService : WearableListenerService() {
                         val intent = Intent(this, MainActivity::class.java)
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
                         startActivity(intent)
-                        sendBroadcast(Intent("dev.veeso.opintapowearos.CREDENTIALS_UPDATED"))
+                        sendBroadcast(Intent("dev.veeso.opentapowearos.CREDENTIALS_UPDATED"))
                     } catch (e: Exception) {
                         Log.e(TAG, "Error processing credentials data item", e)
                     }
