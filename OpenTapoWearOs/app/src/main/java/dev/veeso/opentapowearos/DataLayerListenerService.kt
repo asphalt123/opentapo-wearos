@@ -7,7 +7,6 @@ import com.google.android.gms.wearable.DataEventBuffer
 import com.google.android.gms.wearable.DataMapItem
 import com.google.android.gms.wearable.MessageEvent
 import com.google.android.gms.wearable.WearableListenerService
-import java.nio.charset.Charsets
 
 class DataLayerListenerService : WearableListenerService() {
 
