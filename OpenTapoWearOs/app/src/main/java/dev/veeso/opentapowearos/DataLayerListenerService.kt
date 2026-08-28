@@ -1,6 +1,7 @@
 package dev.veeso.opentapowearos
 
 import android.content.Intent
+import android.os.IBinder
 import android.util.Log
 import com.google.android.gms.wearable.DataEvent
 import com.google.android.gms.wearable.DataEventBuffer
@@ -15,8 +16,25 @@ class DataLayerListenerService : WearableListenerService() {
         private const val CREDENTIALS_PATH = "/opentapo/credentials"
     }
 
+    override fun onCreate() {
+        Log.d(TAG, "DataLayerListenerService onCreate")
+        super.onCreate()
+    }
+
+    override fun onDestroy() {
+        Log.d(TAG, "DataLayerListenerService onDestroy")
+        super.onDestroy()
+    }
+
+    override fun onBind(intent: Intent?): IBinder? {
+        Log.d(TAG, "DataLayerListenerService onBind")
+        return super.onBind(intent)
+    }
+
     override fun onDataChanged(events: DataEventBuffer) {
+        Log.d(TAG, "onDataChanged called events=${events.count}")
         for (event in events) {
+            Log.d(TAG, "event path=${event.dataItem.uri.path} type=${event.type}")
             if (event.type == DataEvent.TYPE_CHANGED) {
                 if (event.dataItem.uri.path == CREDENTIALS_PATH) {
                     try {
@@ -46,6 +64,7 @@ class DataLayerListenerService : WearableListenerService() {
     }
 
     override fun onMessageReceived(messageEvent: MessageEvent) {
+        Log.d(TAG, "onMessageReceived called path=${messageEvent.path} from=${messageEvent.sourceNodeId} dataLen=${messageEvent.data.size}")
         if (messageEvent.path == "/opentapo/credentials") {
             try {
                 val payload = String(messageEvent.data, Charsets.UTF_8)
