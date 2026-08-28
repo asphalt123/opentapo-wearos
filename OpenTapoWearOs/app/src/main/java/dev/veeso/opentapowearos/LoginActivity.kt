@@ -97,6 +97,7 @@ class LoginActivity : Activity() {
             editor.putString(MainActivity.SHARED_PREFS_PASSWORD, password)
         }
         editor.apply()
+        SyncHelper.sendCredentialsToMobile(this, username, password)
     }
 
     private fun readCredentialsFromPrefs() {
