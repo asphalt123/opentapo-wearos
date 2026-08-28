@@ -88,3 +88,7 @@ lint/tmp/
 
 .DS_Store
 
+# Agent memory (Hermes) — local only, never commit
+memoryproject.md
+MEMORY.md
+
