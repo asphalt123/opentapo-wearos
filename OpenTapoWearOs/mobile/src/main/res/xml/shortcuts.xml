@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <capability android:name="actions.intent.OPEN_APP_FEATURE">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetClass="dev.veeso.opentapo.mobile.voice.VoiceActionActivity"
+            android:targetPackage="dev.veeso.opentapowearos">
+            <url-parameter
+                android:name="feature"
+                android:key="feature" />
+            <extra
+                android:name="state"
+                android:key="feature" />
+        </intent>
+    </capability>
+
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/ic_tile"
+        android:shortcutId="all_on"
+        android:shortcutLongLabel="@string/voice_all_on"
+        android:shortcutShortLabel="@string/voice_all_on">
+        <intent
+            android:action="dev.veeso.opentapo.mobile.voice.ALL_ON"
+            android:targetClass="dev.veeso.opentapo.mobile.voice.VoiceActionActivity"
+            android:targetPackage="dev.veeso.opentapowearos" />
+        <categories android:name="android.shortcut.conversation" />
+    </shortcut>
+
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/ic_tile"
+        android:shortcutId="all_off"
+        android:shortcutLongLabel="@string/voice_all_off"
+        android:shortcutShortLabel="@string/voice_all_off">
+        <intent
+            android:action="dev.veeso.opentapo.mobile.voice.ALL_OFF"
+            android:targetClass="dev.veeso.opentapo.mobile.voice.VoiceActionActivity"
+            android:targetPackage="dev.veeso.opentapowearos" />
+        <categories android:name="android.shortcut.conversation" />
+    </shortcut>
+
+</shortcuts>

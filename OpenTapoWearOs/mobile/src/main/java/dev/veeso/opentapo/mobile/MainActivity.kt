@@ -123,6 +123,10 @@ class MainActivity : AppCompatActivity() {
                     startActivity(Intent(this, dev.veeso.opentapo.mobile.account.AccountActivity::class.java))
                     true
                 }
+                R.id.action_voice -> {
+                    startActivity(Intent(this, dev.veeso.opentapo.mobile.voice.VoiceHelpActivity::class.java))
+                    true
+                }
                 else -> false
             }
         }
@@ -175,6 +179,7 @@ class MainActivity : AppCompatActivity() {
             // case where the watch pushed while the phone app was closed)
             pullDevicesFromDataLayer()
             discover()
+            dev.veeso.opentapo.mobile.voice.VoiceShortcutManager.refresh(this)
             dev.veeso.opentapo.mobile.monitor.DeviceMonitorScheduler.schedule(this)
             dev.veeso.opentapo.mobile.monitor.DeviceMonitorReceiver.refreshPersistent(this)
         }

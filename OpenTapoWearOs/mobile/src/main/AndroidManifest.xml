@@ -18,6 +18,13 @@
         android:theme="@style/Theme.OpenTapoMobile"
         android:usesCleartextTraffic="true">
 
+        <meta-data
+            android:name="android.app.shortcuts"
+            android:resource="@xml/shortcuts" />
+        <meta-data
+            android:name="com.google.android.actions"
+            android:resource="@xml/actions" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -52,6 +59,33 @@
             android:name=".control.DeviceControlActivity"
             android:exported="false"
             android:theme="@style/Theme.OpenTapoMobile" />
+        <activity
+            android:name=".voice.VoiceHelpActivity"
+            android:exported="false"
+            android:theme="@style/Theme.OpenTapoMobile" />
+        <activity
+            android:name=".voice.VoiceActionActivity"
+            android:exported="true"
+            android:theme="@style/Theme.OpenTapoMobile">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="opentapo" android:host="toggle" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="opentapo" android:host="voice" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="opentapo.veeso.dev" android:pathPrefix="/toggle" />
+            </intent-filter>
+        </activity>
         <activity
             android:name=".account.AccountActivity"
             android:exported="false"

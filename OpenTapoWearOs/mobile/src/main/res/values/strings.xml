@@ -181,4 +181,15 @@
     <string name="account_deleted">Compte %1$s supprimé</string>
     <string name="account_delete_title">Supprimer %1$s ?</string>
     <string name="account_delete_hint">Les appareils de ce compte seront oubliés sur ce téléphone.</string>
+    <!-- Raccourcis vocaux -->
+    <string name="menu_voice">Assistant vocal</string>
+    <string name="voice_intro">Pilote tes prises à la voix ou depuis un appui long sur l\'icône OpenTapo. Essaie :</string>
+    <string name="voice_examples">• « Ok Google, allume la prise du salon avec OpenTapo »\n• « Ok Google, éteins la prise du bureau avec OpenTapo »\n• Appui long sur l\'icône OpenTapo → touche une prise pour la basculer\n• Deep link : opentapo://toggle?device=Salon&amp;state=on</string>
+    <string name="voice_publish">Publier les raccourcis des prises</string>
+    <string name="voice_published">Raccourcis publiés sur le launcher</string>
+    <string name="voice_no_match">Aucune prise reconnue — précise son nom tel qu\'affiché dans la liste</string>
+    <string name="voice_all_result">%1$d/%2$d prise(s) commandée(s)</string>
+    <string name="voice_all_on">Tout allumer</string>
+    <string name="voice_all_off">Tout éteindre</string>
+    <string name="voice_shortcut_long">%1$s — passer à %2$s</string>
 </resources>
