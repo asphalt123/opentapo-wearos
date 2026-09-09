@@ -26,6 +26,23 @@
         <activity
             android:name=".AddDeviceActivity"
             android:exported="false" />
+        <activity
+            android:name=".widget.WidgetConfigActivity"
+            android:exported="false"
+            android:theme="@style/Theme.OpenTapoMobile" />
+
+        <receiver
+            android:name=".widget.DeviceWidgetProvider"
+            android:exported="false"
+            android:label="@string/widget_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="dev.veeso.opentapo.mobile.widget.TOGGLE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/device_widget_info" />
+        </receiver>
 
         <service
             android:name=".DeviceSyncListenerService"

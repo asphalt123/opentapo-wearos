@@ -31,6 +31,7 @@ import dev.veeso.opentapo.mobile.net.NetworkUtils
 import dev.veeso.opentapo.mobile.tapo.device.Device
 import dev.veeso.opentapo.mobile.view.intent_data.Credentials
 import dev.veeso.opentapo.mobile.view.main.DeviceAdapter
+import dev.veeso.opentapo.mobile.widget.DeviceWidgetHelper
 import kotlinx.coroutines.*
 import java.net.Inet4Address
 
@@ -269,6 +270,7 @@ class MainActivity : AppCompatActivity() {
                 devices.addAll(merged.sortedBy { it.alias })
                 persistDevices()
                 pushDevicesToWear()
+                DeviceWidgetHelper.updateAll(this@MainActivity)
                 adapter.notifyDataSetChanged()
                 emptyView.visibility = if (devices.isEmpty()) View.VISIBLE else View.GONE
                 if (devices.isEmpty()) {
@@ -479,6 +481,8 @@ class MainActivity : AppCompatActivity() {
                     if (newState) device.on() else device.off()
                 }
                 device.status = device.status.copy(deviceOn = newState)
+                persistDevices()
+                DeviceWidgetHelper.updateAll(this@MainActivity)
                 showMessage(
                     "${device.alias} : " + getString(if (newState) R.string.state_on else R.string.state_off)
                 )

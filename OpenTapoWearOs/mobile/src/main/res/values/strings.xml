@@ -23,4 +23,17 @@
     <string name="state_off">Éteint</string>
     <string name="state_offline">Hors ligne</string>
     <string name="powering">Envoi en cours…</string>
+    <string name="cancel">Annuler</string>
+    <string name="save">Enregistrer</string>
+    <string name="delete">Supprimer</string>
+    <string name="close">Fermer</string>
+    <!-- Widgets -->
+    <string name="widget_label">OpenTapo prise</string>
+    <string name="widget_desc">Allume/éteint une prise Tapo sans ouvrir l\'app</string>
+    <string name="widget_turn_on">Allumer</string>
+    <string name="widget_turn_off">Éteindre</string>
+    <string name="widget_no_device">Prise inconnue</string>
+    <string name="widget_configure">Choisir la prise</string>
+    <string name="widget_config_title">Choisir la prise du widget</string>
+    <string name="widget_config_empty">Aucun appareil : ouvre l\'app et lance un scan d\'abord.</string>
 </resources>
