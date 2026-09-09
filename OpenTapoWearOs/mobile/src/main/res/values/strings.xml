@@ -143,4 +143,30 @@
     <string name="group_no_more_devices">Toutes les prises connues sont déjà dans le groupe</string>
     <string name="group_saved">Groupe %1$s enregistré</string>
     <string name="group_delete_title">Supprimer %1$s ?</string>
+    <!-- Géofencing -->
+    <string name="menu_geofence">Zones GPS</string>
+    <string name="geofence_hint">Allume tes prises en entrant dans un périmètre, éteins-les en sortant. Le rayon et les actions se règlent par zone.</string>
+    <string name="geofence_label_hint">Nom de la zone (ex : Maison)</string>
+    <string name="geofence_lat_hint">Latitude (ex : 48.85)</string>
+    <string name="geofence_lng_hint">Longitude (ex : 2.35)</string>
+    <string name="geofence_here">Utiliser ma position</string>
+    <string name="geofence_radius_value">Rayon : %1$d m</string>
+    <string name="geofence_no_device">Aucune prise choisie</string>
+    <string name="geofence_pick_devices">Choisir les prises</string>
+    <string name="geofence_on_enter">À l\'entrée</string>
+    <string name="geofence_on_exit">À la sortie</string>
+    <string name="geofence_action_on">Allumer</string>
+    <string name="geofence_action_off">Éteindre</string>
+    <string name="geofence_action_none">Rien</string>
+    <string name="geofence_save">Ajouter la zone</string>
+    <string name="geofence_none">Aucune zone définie.</string>
+    <string name="geofence_added">Zone %1$s ajoutée</string>
+    <string name="geofence_need_label">Donne un nom à la zone</string>
+    <string name="geofence_need_coords">Coordonnées invalides (latitude −90…90, longitude −180…180)</string>
+    <string name="geofence_need_location">Autorise la localisation pour utiliser les zones GPS</string>
+    <string name="geofence_no_fix">Position indisponible — réessaie dehors ou avec le GPS actif</string>
+    <string name="geofence_fix_ok">Position remplie</string>
+    <string name="geofence_enter_title">Bienvenue : %1$s</string>
+    <string name="geofence_exit_title">Départ : %1$s</string>
+    <string name="geofence_applied">%1$s : %2$d/%3$d prise(s) %4$s</string>
 </resources>

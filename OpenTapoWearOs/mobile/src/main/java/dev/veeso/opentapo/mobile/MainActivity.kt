@@ -115,6 +115,10 @@ class MainActivity : AppCompatActivity() {
                     startActivity(Intent(this, dev.veeso.opentapo.mobile.group.GroupActivity::class.java))
                     true
                 }
+                R.id.action_geofence -> {
+                    startActivity(Intent(this, dev.veeso.opentapo.mobile.geofence.GeofenceActivity::class.java))
+                    true
+                }
                 else -> false
             }
         }
