@@ -17,13 +17,15 @@ object SyncHelper {
     fun sendCredentialsToWear(context: Context, user: String, pass: String) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                Log.d(TAG, "sendCredentialsToWear: putDataItem")
+                Log.d(TAG, "sendCredentialsToWear: putDataItem path=$CREDENTIALS_PATH")
                 val req = PutDataMapRequest.create(CREDENTIALS_PATH)
                 req.dataMap.putString("username", user)
                 req.dataMap.putString("password", pass)
                 req.dataMap.putLong("timestamp", System.currentTimeMillis())
-                Wearable.getDataClient(context).putDataItem(req.asPutDataRequest().setUrgent())
-                Log.d(TAG, "sendCredentialsToWear: putDataItem OK")
+                val result = Tasks.await(
+                    Wearable.getDataClient(context).putDataItem(req.asPutDataRequest().setUrgent())
+                )
+                Log.d(TAG, "sendCredentialsToWear: putDataItem OK uri=${result?.uri}")
             } catch (e: Exception) {
                 Log.e(TAG, "sendCredentialsToWear FAILED: ${e.message} ${e}", e)
             }
@@ -37,11 +39,17 @@ object SyncHelper {
                 val nodeClient = Wearable.getNodeClient(context)
                 val nodes = Tasks.await(nodeClient.connectedNodes)
                 Log.d(TAG, "Connected nodes count=${nodes.size} ids=${nodes.map{it.id}}")
+                if (nodes.isEmpty()) {
+                    Log.w(TAG, "No connected nodes; message not sent")
+                    return@launch
+                }
                 val payload = "$user\n$pass".toByteArray(Charsets.UTF_8)
                 for (node in nodes) {
                     try {
                         Log.d(TAG, "Sending to node ${node.id}")
-                        Wearable.getMessageClient(context).sendMessage(node.id, "/opentapo/credentials", payload)
+                        Tasks.await(
+                            Wearable.getMessageClient(context).sendMessage(node.id, "/opentapo/credentials", payload)
+                        )
                         Log.d(TAG, "Sent to node ${node.id} OK")
                     } catch (e: Exception) {
                         Log.e(TAG, "send to ${node.id} FAILED: ${e.message}", e)

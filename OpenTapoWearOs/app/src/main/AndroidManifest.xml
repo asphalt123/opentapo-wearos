@@ -6,7 +6,6 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
     <uses-permission android:name="com.google.android.permission.PROVIDE_BACKGROUND" />
-    <uses-permission android:name="com.google.android.wearable.permission.BIND_WEARABLE_LISTENER_SERVICE" />
 
     <uses-feature android:name="android.hardware.type.watch" />
 
@@ -47,10 +46,16 @@
         <activity
             android:name=".NewGroupActivity"
             android:exported="true" />
-        <service android:name=".DataLayerListenerService" android:exported="true" android:permission="com.google.android.wearable.permission.BIND_WEARABLE_LISTENER_SERVICE">
+        <service
+            android:name=".DataLayerListenerService"
+            android:exported="true">
             <intent-filter>
                 <action android:name="com.google.android.gms.wearable.DATA_CHANGED" />
-                <data android:scheme="wear" android:host="*" android:path="/opentapo/credentials" />
+                <data android:scheme="wear" android:host="*" android:pathPrefix="/opentapo" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
+                <data android:scheme="wear" android:host="*" android:pathPrefix="/opentapo" />
             </intent-filter>
         </service>
     </application>
