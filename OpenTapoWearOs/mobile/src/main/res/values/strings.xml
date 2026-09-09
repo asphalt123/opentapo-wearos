@@ -121,4 +121,26 @@
     <string name="monitor_changed_text">%1$s est maintenant %2$s (changé hors de l\'app).</string>
     <string name="monitor_persistent_title">OpenTapo</string>
     <string name="monitor_persistent_text">%1$d/%2$d allumée(s) • %3$d hors ligne</string>
+    <!-- Groupes -->
+    <string name="menu_groups">Groupes</string>
+    <string name="group_list_hint">Appui long = tout allumer/éteindre. Glisser = réordonner. Balayer = supprimer. Touche = éditer.</string>
+    <string name="group_none">Aucun groupe — crée ton premier groupe ci-dessous.</string>
+    <string name="group_members">%1$d prise(s)</string>
+    <string name="group_summary">%1$d/%2$d allumée(s)</string>
+    <string name="group_card_hint">Long : tout ON/OFF • Touche : éditer</string>
+    <string name="group_drag_hint">Réordonner</string>
+    <string name="group_create_title">Créer un groupe</string>
+    <string name="group_name_hint">Nom du groupe (ex : Salon)</string>
+    <string name="group_name_empty">Donne un nom au groupe</string>
+    <string name="group_name_exists">Un groupe porte déjà ce nom</string>
+    <string name="group_deleted">Groupe %1$s supprimé</string>
+    <string name="group_empty">Ce groupe ne contient aucune prise connue</string>
+    <string name="group_applying">Commande groupée %1$s…</string>
+    <string name="group_applied">%1$s : %2$d/%3$d prise(s) OK</string>
+    <string name="group_edit_title">Éditer le groupe</string>
+    <string name="group_members_hint">Glisse pour réordonner, balaye ou touche la poubelle pour retirer.</string>
+    <string name="group_add_device">Ajouter une prise</string>
+    <string name="group_no_more_devices">Toutes les prises connues sont déjà dans le groupe</string>
+    <string name="group_saved">Groupe %1$s enregistré</string>
+    <string name="group_delete_title">Supprimer %1$s ?</string>
 </resources>

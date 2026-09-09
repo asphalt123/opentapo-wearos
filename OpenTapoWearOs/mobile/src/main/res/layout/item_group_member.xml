@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/op_surface_variant"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:padding="12dp">
+
+    <ImageView
+        android:id="@+id/item_member_handle"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:contentDescription="@string/group_drag_hint"
+        android:src="@android:drawable/ic_menu_sort_by_size"
+        android:tint="@color/op_text_secondary" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/item_member_alias"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/op_text_primary"
+            android:textSize="15sp" />
+
+        <TextView
+            android:id="@+id/item_member_state"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <ImageButton
+        android:id="@+id/item_member_remove"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/delete"
+        android:src="@android:drawable/ic_menu_delete"
+        android:tint="@color/op_text_secondary" />
+
+</LinearLayout>

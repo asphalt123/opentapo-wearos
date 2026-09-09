@@ -50,6 +50,14 @@
             android:exported="false"
             android:theme="@style/Theme.OpenTapoMobile" />
         <activity
+            android:name=".group.GroupActivity"
+            android:exported="false"
+            android:theme="@style/Theme.OpenTapoMobile" />
+        <activity
+            android:name=".group.GroupEditActivity"
+            android:exported="false"
+            android:theme="@style/Theme.OpenTapoMobile" />
+        <activity
             android:name=".monitor.MonitorSettingsActivity"
             android:exported="false"
             android:theme="@style/Theme.OpenTapoMobile" />

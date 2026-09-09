@@ -111,6 +111,10 @@ class MainActivity : AppCompatActivity() {
                     startActivity(Intent(this, dev.veeso.opentapo.mobile.monitor.MonitorSettingsActivity::class.java))
                     true
                 }
+                R.id.action_groups -> {
+                    startActivity(Intent(this, dev.veeso.opentapo.mobile.group.GroupActivity::class.java))
+                    true
+                }
                 else -> false
             }
         }
