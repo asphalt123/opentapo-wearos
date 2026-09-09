@@ -6,8 +6,8 @@ import android.util.Log
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.snackbar.Snackbar
 import dev.veeso.opentapo.mobile.tapo.api.tplinkcloud.TpLinkCloudClient
 import kotlinx.coroutines.*
 
@@ -32,7 +32,9 @@ class LoginActivity : AppCompatActivity() {
             val user = email.text.toString().trim()
             val pass = password.text.toString()
             if (user.isEmpty() || pass.isEmpty()) {
-                Toast.makeText(this, R.string.error_generic, Toast.LENGTH_SHORT).show()
+                Snackbar.make(findViewById(android.R.id.content),
+                    getString(R.string.error_generic, "Identifiants vides"),
+                    Snackbar.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
             button.isEnabled = false
@@ -50,6 +52,7 @@ class LoginActivity : AppCompatActivity() {
                     SyncHelper.sendCredentialsToWearViaMessage(this@LoginActivity, user, pass)
                     Log.d(TAG, "SyncHelper calls done after login")
                     startActivity(Intent(this@LoginActivity, MainActivity::class.java))
+                    overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
                     finish()
                 } catch (e: Exception) {
                     // cloud login may fail for accounts created with the new API;
@@ -62,6 +65,7 @@ class LoginActivity : AppCompatActivity() {
                     SyncHelper.sendCredentialsToWearViaMessage(this@LoginActivity, user, pass)
                     Log.d(TAG, "SyncHelper calls done after login")
                     startActivity(Intent(this@LoginActivity, MainActivity::class.java))
+                    overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
                     finish()
                 }
             }

@@ -10,8 +10,8 @@ import android.util.Log
 import android.view.View
 import android.widget.ProgressBar
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -24,6 +24,8 @@ import com.google.android.gms.wearable.MessageClient
 import com.google.android.gms.wearable.MessageEvent
 import com.google.android.gms.wearable.Wearable
 import com.google.android.material.appbar.MaterialToolbar
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.snackbar.Snackbar
 import dev.veeso.opentapo.mobile.net.DeviceScanner
 import dev.veeso.opentapo.mobile.net.NetworkUtils
 import dev.veeso.opentapo.mobile.tapo.device.Device
@@ -71,16 +73,20 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val toolbar: MaterialToolbar = findViewById(R.id.toolbar)
+        toolbar.subtitle = getString(R.string.device_list_subtitle)
         toolbar.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 R.id.action_logout -> {
                     logout()
                     true
                 }
+                R.id.action_refresh -> {
+                    refreshLayout.isRefreshing = true
+                    discover()
+                    true
+                }
                 R.id.action_add_ip -> {
-                    val intent = Intent(this, AddDeviceActivity::class.java)
-                    intent.putExtra(AddDeviceActivity.EXTRA_CREDENTIALS, credentials)
-                    startActivityForResult(intent, REQUEST_ADD_DEVICE)
+                    openAddDevice()
                     true
                 }
                 else -> false
@@ -94,10 +100,28 @@ class MainActivity : AppCompatActivity() {
         val list: RecyclerView = findViewById(R.id.device_list)
         list.layoutManager = LinearLayoutManager(this)
         list.adapter = adapter
+        list.itemAnimator = DefaultItemAnimator().apply {
+            addDuration = 220
+            changeDuration = 220
+            moveDuration = 220
+        }
 
         refreshLayout = findViewById(R.id.swipe_refresh)
-        refreshLayout.setColorSchemeColors(getColor(R.color.op_accent))
+        refreshLayout.setColorSchemeColors(
+            getColor(R.color.op_accent),
+            getColor(R.color.op_primary)
+        )
+        refreshLayout.setProgressBackgroundColorSchemeColor(getColor(R.color.op_surface_variant))
+        refreshLayout.setSize(SwipeRefreshLayout.LARGE)
         refreshLayout.setOnRefreshListener { discover() }
+
+        val fab: FloatingActionButton = findViewById(R.id.fab_add)
+        fab.setOnClickListener {
+            it.animate().scaleX(0.9f).scaleY(0.9f).setDuration(90)
+                .withEndAction { it.animate().scaleX(1f).scaleY(1f).setDuration(120).start() }
+                .start()
+            openAddDevice()
+        }
 
         emptyView = findViewById(R.id.empty_view)
         progress = findViewById(R.id.progress)
@@ -105,6 +129,7 @@ class MainActivity : AppCompatActivity() {
         credentials = readCredentials()
         if (credentials == null) {
             startActivity(Intent(this, LoginActivity::class.java))
+            overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
             finish()
         } else {
             Wearable.getDataClient(this).addListener(dataListener)
@@ -176,7 +201,24 @@ class MainActivity : AppCompatActivity() {
     private fun logout() {
         getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().clear().apply()
         startActivity(Intent(this, LoginActivity::class.java))
+        overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
         finish()
+    }
+
+    private fun openAddDevice() {
+        val intent = Intent(this, AddDeviceActivity::class.java)
+        intent.putExtra(AddDeviceActivity.EXTRA_CREDENTIALS, credentials)
+        startActivityForResult(intent, REQUEST_ADD_DEVICE)
+        overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
+    }
+
+    private fun showMessage(text: String, isError: Boolean = false) {
+        val root = findViewById<View>(android.R.id.content)
+        val bar = Snackbar.make(root, text, if (isError) Snackbar.LENGTH_LONG else Snackbar.LENGTH_SHORT)
+        bar.setBackgroundTint(getColor(if (isError) R.color.op_error_container else R.color.op_surface_variant))
+        bar.setTextColor(getColor(R.color.op_text_primary))
+        bar.setActionTextColor(getColor(R.color.op_accent))
+        bar.show()
     }
 
     private fun discover() {
@@ -188,9 +230,10 @@ class MainActivity : AppCompatActivity() {
                 val network = withContext(Dispatchers.IO) { localNetwork() }
                 Log.i(TAG, "Scanning subnet: $network")
                 if (network == null) {
-                    Toast.makeText(this@MainActivity,
+                    showMessage(
                         "Pas de réseau Wi-Fi détecté — vérifie que le téléphone est en Wi-Fi",
-                        Toast.LENGTH_LONG).show()
+                        isError = true
+                    )
                 }
                 val scanned = withContext(Dispatchers.IO) {
                     val scanner = DeviceScanner(creds.username, creds.password)
@@ -229,15 +272,18 @@ class MainActivity : AppCompatActivity() {
                 adapter.notifyDataSetChanged()
                 emptyView.visibility = if (devices.isEmpty()) View.VISIBLE else View.GONE
                 if (devices.isEmpty()) {
-                    Toast.makeText(this@MainActivity,
+                    showMessage(
                         "Aucune prise trouvée sur ${network ?: "?"}. " +
                         "Vérifie que la compatibilité tierce est activée dans l'app Tapo " +
                         "(Profil → Paramètres → Compatibilité appareils tiers).",
-                        Toast.LENGTH_LONG).show()
+                        isError = true
+                    )
+                } else {
+                    emptyView.animate().alpha(0f).setDuration(150).start()
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Discovery failed", e)
-                Toast.makeText(this@MainActivity, getString(R.string.error_generic, e.message), Toast.LENGTH_LONG).show()
+                showMessage(getString(R.string.error_generic, e.message), isError = true)
                 emptyView.visibility = View.VISIBLE
             } finally {
                 progress.visibility = View.GONE
@@ -433,11 +479,12 @@ class MainActivity : AppCompatActivity() {
                     if (newState) device.on() else device.off()
                 }
                 device.status = device.status.copy(deviceOn = newState)
+                showMessage(
+                    "${device.alias} : " + getString(if (newState) R.string.state_on else R.string.state_off)
+                )
             } catch (e: Exception) {
                 Log.e(TAG, "Toggle failed", e)
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(this@MainActivity, getString(R.string.error_generic, e.message), Toast.LENGTH_SHORT).show()
-                }
+                showMessage(getString(R.string.error_generic, e.message), isError = true)
             } finally {
                 adapter.notifyDataSetChanged()
             }

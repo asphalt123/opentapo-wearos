@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- OpenTapo modern dark theme -->
+    <!-- OpenTapo modern dark theme (round-aware via BoxInsetLayout) -->
     <style name="OpenTapoTheme" parent="@android:style/Theme.DeviceDefault.NoActionBar">
         <item name="android:colorPrimary">@color/op_primary</item>
         <item name="android:colorPrimaryDark">@color/op_primary_dark</item>
@@ -13,24 +13,42 @@
     </style>
 
     <style name="OpenTapoHeaderText" parent="@android:style/TextAppearance.DeviceDefault.Small">
-        <item name="android:textSize">13sp</item>
+        <item name="android:textSize">12sp</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textAllCaps">true</item>
-        <item name="android:letterSpacing">0.1</item>
+        <item name="android:letterSpacing">0.12</item>
         <item name="android:textColor">@color/op_accent</item>
     </style>
 
+    <style name="OpenTapoSectionLabel" parent="@android:style/TextAppearance.DeviceDefault.Small">
+        <item name="android:textSize">11sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.12</item>
+        <item name="android:textColor">@color/op_text_secondary</item>
+    </style>
+
     <style name="OpenTapoDeviceAlias">
-        <item name="android:textSize">15sp</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
         <item name="android:textColor">@color/op_text_primary</item>
     </style>
 
     <style name="OpenTapoDeviceSub">
-        <item name="android:textSize">11sp</item>
+        <item name="android:textSize">12sp</item>
         <item name="android:textColor">@color/op_text_secondary</item>
+    </style>
+
+    <style name="OpenTapoDeviceState">
+        <item name="android:textSize">11sp</item>
+        <item name="android:textStyle">bold</item>
     </style>
 
     <style name="OpenTapoCard">
         <item name="android:background">@drawable/bg_device_card</item>
+    </style>
+
+    <style name="OpenTapoCardOn">
+        <item name="android:background">@drawable/bg_device_card_on</item>
     </style>
 </resources>

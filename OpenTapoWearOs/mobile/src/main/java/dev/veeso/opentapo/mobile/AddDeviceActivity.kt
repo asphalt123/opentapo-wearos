@@ -6,8 +6,8 @@ import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ProgressBar
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.snackbar.Snackbar
 import dev.veeso.opentapo.mobile.tapo.api.tapo.TapoClient
 import dev.veeso.opentapo.mobile.view.intent_data.Credentials
 import kotlinx.coroutines.CoroutineScope
@@ -48,7 +48,7 @@ class AddDeviceActivity : AppCompatActivity() {
                 null
             }
             if (address == null) {
-                Toast.makeText(this, getString(R.string.error_generic, "IP invalide"), Toast.LENGTH_SHORT).show()
+                snack(getString(R.string.error_generic, "IP invalide"), true)
                 return@setOnClickListener
             }
             button.isEnabled = false
@@ -69,9 +69,9 @@ class AddDeviceActivity : AppCompatActivity() {
                 if (device != null) {
                     setResult(RESULT_OK, Intent().putExtra(EXTRA_DEVICE_IP, device.ipAddress))
                     finish()
+                    overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
                 } else {
-                    Toast.makeText(this@AddDeviceActivity,
-                        getString(R.string.error_generic, result.second), Toast.LENGTH_LONG).show()
+                    snack(getString(R.string.error_generic, result.second), true)
                 }
             }
         }
@@ -80,6 +80,14 @@ class AddDeviceActivity : AppCompatActivity() {
     override fun onDestroy() {
         scope.cancel()
         super.onDestroy()
+    }
+
+    private fun snack(text: String, isError: Boolean = false) {
+        val bar = Snackbar.make(findViewById(android.R.id.content), text,
+            if (isError) Snackbar.LENGTH_LONG else Snackbar.LENGTH_SHORT)
+        bar.setBackgroundTint(getColor(if (isError) R.color.op_error_container else R.color.op_surface_variant))
+        bar.setTextColor(getColor(R.color.op_text_primary))
+        bar.show()
     }
 
     companion object {

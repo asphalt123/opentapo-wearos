@@ -14,6 +14,7 @@
     <string name="main_activity_setup_new_device">Add new device</string>
     <string name="main_activity_new_group">Create new group</string>
     <string name="main_activity_del_group">Remove selected groups</string>
+    <string name="login_activity_title">Sign in</string>
     <string name="login_activity_email">Email Address</string>
     <string name="login_activity_email_input">enter email</string>
     <string name="login_activity_password">Password</string>

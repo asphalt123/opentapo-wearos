@@ -3,7 +3,8 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/op_background">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
@@ -17,6 +18,7 @@
             android:layout_height="?attr/actionBarSize"
             app:title="@string/device_list_title"
             app:titleTextColor="@color/op_text_primary"
+            app:subtitleTextColor="@color/op_text_secondary"
             app:menu="@menu/menu_main" />
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -24,6 +26,7 @@
         android:id="@+id/swipe_refresh"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_marginTop="?attr/actionBarSize"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <androidx.recyclerview.widget.RecyclerView
@@ -31,7 +34,8 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:clipToPadding="false"
-            android:padding="12dp" />
+            android:padding="16dp"
+            android:paddingBottom="96dp" />
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
     <TextView
@@ -39,28 +43,59 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
+        android:layout_marginHorizontal="48dp"
+        android:drawableTop="@android:drawable/ic_menu_search"
+        android:drawablePadding="16dp"
+        android:drawableTint="@color/op_text_secondary"
         android:gravity="center"
-        android:padding="32dp"
+        android:lineSpacingExtra="4dp"
         android:text="@string/no_devices"
         android:textColor="@color/op_text_secondary"
+        android:textSize="14sp"
         android:visibility="gone" />
 
-    <TextView
-        android:id="@+id/disclaimer_view"
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:background="#334FC3F7"
-        android:padding="12dp"
-        android:text="@string/compatibility_disclaimer"
-        android:textColor="@color/op_text_primary"
-        android:textSize="11sp" />
+        android:layout_margin="12dp"
+        android:layout_marginEnd="88dp"
+        app:cardBackgroundColor="#1A4FC3F7"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="0dp"
+        app:strokeColor="@color/op_outline"
+        app:strokeWidth="1dp">
+
+        <TextView
+            android:id="@+id/disclaimer_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:drawableStart="@android:drawable/ic_dialog_info"
+            android:drawablePadding="8dp"
+            android:drawableTint="@color/op_accent"
+            android:padding="12dp"
+            android:text="@string/compatibility_disclaimer"
+            android:textColor="@color/op_text_primary"
+            android:textSize="11sp" />
+    </com.google.android.material.card.MaterialCardView>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_add"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="16dp"
+        android:contentDescription="@string/add_by_ip"
+        android:src="@android:drawable/ic_input_add"
+        app:backgroundTint="@color/op_primary"
+        app:tint="@color/op_on_primary" />
 
     <ProgressBar
         android:id="@+id/progress"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
+        android:indeterminateTint="@color/op_accent"
         android:visibility="gone" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

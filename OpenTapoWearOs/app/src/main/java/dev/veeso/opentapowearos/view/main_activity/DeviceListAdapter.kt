@@ -7,6 +7,8 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.DecelerateInterpolator
+import android.widget.LinearLayout
 import android.widget.Switch
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
@@ -28,8 +30,11 @@ internal class DeviceListAdapter(private val devices: List<Device>) :
     private val mainHandler = Handler(Looper.getMainLooper())
 
     internal inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val card: LinearLayout = view.findViewById(R.id.device_list_item_card)
+        val dot: View = view.findViewById(R.id.device_list_item_dot)
         val deviceAliasText: TextView = view.findViewById(R.id.device_list_item_alias)
         val deviceModelText: TextView = view.findViewById(R.id.device_list_item_model)
+        val deviceStateText: TextView = view.findViewById(R.id.device_list_item_state)
         val devicePowerSwitch: Switch = view.findViewById(R.id.device_list_item_power)
 
         init {
@@ -55,6 +60,8 @@ internal class DeviceListAdapter(private val devices: List<Device>) :
                     TAG,
                     String.format("Changing power state for %s to %s", devices[position].alias, isChecked)
                 )
+                pulse(card)
+                applyVisualState(this, isChecked)
                 setPowerState(devices[position], isChecked, this)
             }
         }
@@ -73,12 +80,57 @@ internal class DeviceListAdapter(private val devices: List<Device>) :
         // power switch (suppress listener to avoid firing during rebinding)
         suppressListener = true
         holder.devicePowerSwitch.isChecked = device.status.deviceOn
-        holder.devicePowerSwitch.alpha = if (device.status.deviceOn) 1f else 0.6f
         suppressListener = false
+        applyVisualState(holder, device.status.deviceOn)
+        // entrance fade for small round screens: subtle, cheap
+        holder.itemView.alpha = 0f
+        holder.itemView.animate()
+            .alpha(1f)
+            .setDuration(180)
+            .setStartDelay((position % 6 * 25).toLong())
+            .setInterpolator(DecelerateInterpolator())
+            .start()
     }
 
     override fun getItemCount(): Int {
         return devices.size
+    }
+
+    /** Connection + power indicator: green dot + ON label when on, red/grey when off. */
+    private fun applyVisualState(holder: ViewHolder, isOn: Boolean) {
+        val ctx = holder.itemView.context
+        holder.dot.setBackgroundResource(if (isOn) R.drawable.dot_on else R.drawable.dot_off)
+        holder.card.setBackgroundResource(
+            if (isOn) R.drawable.bg_device_card_on else R.drawable.bg_device_card
+        )
+        holder.deviceStateText.text = ctx.getString(
+            if (isOn) R.string.device_activity_power_on else R.string.device_activity_power_off
+        )
+        holder.deviceStateText.setTextColor(
+            ctx.getColor(if (isOn) R.color.op_on else R.color.op_text_secondary)
+        )
+        holder.devicePowerSwitch.alpha = if (isOn) 1f else 0.6f
+        holder.deviceAliasText.alpha = if (isOn) 1f else 0.85f
+    }
+
+    private fun pulse(view: View) {
+        view.animate().cancel()
+        view.scaleX = 1f
+        view.scaleY = 1f
+        view.animate()
+            .scaleX(0.96f)
+            .scaleY(0.96f)
+            .setDuration(90)
+            .setInterpolator(DecelerateInterpolator())
+            .withEndAction {
+                view.animate()
+                    .scaleX(1f)
+                    .scaleY(1f)
+                    .setDuration(140)
+                    .setInterpolator(DecelerateInterpolator())
+                    .start()
+            }
+            .start()
     }
 
     private fun onLongClick(view: View, adapterPosition: Int) {
@@ -113,12 +165,12 @@ internal class DeviceListAdapter(private val devices: List<Device>) :
                         TAG,
                         String.format("Failed to set power state for %s: %s", device.alias, e)
                     )
-                    // revert the switch on failure
+                    // revert the switch + visuals on failure
                     mainHandler.post {
                         suppressListener = true
                         holder.devicePowerSwitch.isChecked = !powerState
-                        holder.devicePowerSwitch.alpha = if (!powerState) 1f else 0.6f
                         suppressListener = false
+                        applyVisualState(holder, !powerState)
                     }
                 }
             }

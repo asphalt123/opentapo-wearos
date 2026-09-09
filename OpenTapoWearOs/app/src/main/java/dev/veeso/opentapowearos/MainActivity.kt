@@ -847,6 +847,7 @@ class MainActivity : Activity() {
 
     private fun enterDeviceListState() {
         Log.d(TAG, "Entering device list state")
+        updateHeaderDot(online = true)
         toggleLists(visible = true)
         toggleReloadIcon(visible = true)
         toggleNewDeviceIcon(visible = true)
@@ -859,6 +860,7 @@ class MainActivity : Activity() {
 
     private fun enterLoadingDeviceListState() {
         Log.d(TAG, "Entering loading devices state")
+        updateHeaderDot(online = false)
         toggleLists(visible = false)
         toggleNewDeviceIcon(visible = false)
         toggleReloadIcon(visible = false)
@@ -871,6 +873,7 @@ class MainActivity : Activity() {
 
     private fun enterNoDeviceFoundState() {
         Log.d(TAG, "Entering no device found state")
+        updateHeaderDot(online = false)
         toggleLists(visible = false)
         toggleReloadIcon(visible = true)
         toggleNewDeviceIcon(visible = true)
@@ -883,6 +886,7 @@ class MainActivity : Activity() {
 
     private fun enterNoLinkState() {
         Log.d(TAG, "Entering no link state")
+        updateHeaderDot(online = false)
         toggleLists(visible = false)
         toggleNewDeviceIcon(visible = true)
         toggleReloadIcon(visible = true)
@@ -1005,10 +1009,26 @@ class MainActivity : Activity() {
 
             if (visible) {
                 lists.visibility = View.VISIBLE
+                lists.alpha = 0f
+                lists.animate().alpha(1f).setDuration(220).start()
                 populateDeviceList()
                 populateGroupsList()
             } else {
-                lists.visibility = View.GONE
+                lists.animate().alpha(0f).setDuration(150).withEndAction {
+                    lists.visibility = View.GONE
+                    lists.alpha = 1f
+                }.start()
+            }
+        }
+    }
+
+    /** Green header dot when a live device list is shown, red otherwise. */
+    private fun updateHeaderDot(online: Boolean) {
+        runOnUiThread {
+            try {
+                val dot: View = findViewById(R.id.activity_main_conn_dot)
+                dot.setBackgroundResource(if (online) R.drawable.dot_on else R.drawable.dot_off)
+            } catch (_: Exception) {
             }
         }
     }
@@ -1018,8 +1038,13 @@ class MainActivity : Activity() {
             val messageBox: LinearLayout = findViewById(R.id.activity_main_message_box)
             if (visible) {
                 messageBox.visibility = View.VISIBLE
+                messageBox.alpha = 0f
+                messageBox.animate().alpha(1f).setDuration(220).start()
             } else {
-                messageBox.visibility = View.GONE
+                messageBox.animate().alpha(0f).setDuration(150).withEndAction {
+                    messageBox.visibility = View.GONE
+                    messageBox.alpha = 1f
+                }.start()
             }
         }
     }

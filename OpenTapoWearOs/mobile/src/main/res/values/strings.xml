@@ -2,10 +2,13 @@
 <resources>
     <string name="app_name">OpenTapo</string>
     <string name="login_title">Connexion Tapo</string>
+    <string name="login_subtitle">Contrôle tes prises en local, sans cloud</string>
+    <string name="login_hint">Tes identifiants servent uniquement à la connexion locale (KLAP) et sont synchronisés avec ta montre.</string>
     <string name="login_email">E-mail</string>
     <string name="login_password">Mot de passe</string>
     <string name="login_button">Se connecter</string>
     <string name="device_list_title">Mes appareils</string>
+    <string name="device_list_subtitle">Contrôle local via KLAP</string>
     <string name="no_devices">Aucun appareil trouvé.\nVérifie que le téléphone est sur le même réseau Wi-Fi que tes prises.</string>
     <string name="refresh">Actualiser</string>
     <string name="logout">Déconnexion</string>

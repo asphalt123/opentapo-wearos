@@ -1,10 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Base surfaces -->
     <color name="op_background">#FF101418</color>
     <color name="op_surface">#FF1A2028</color>
+    <color name="op_surface_variant">#FF232C38</color>
+    <color name="op_surface_container">#FF202932</color>
+
+    <!-- Brand -->
     <color name="op_primary">#FF2D7DF6</color>
+    <color name="op_on_primary">#FFFFFFFF</color>
+    <color name="op_primary_container">#FF1B3A6B</color>
+    <color name="op_on_primary_container">#FFD6E4FF</color>
     <color name="op_accent">#FF4FC3F7</color>
+    <color name="op_secondary">#FF7EA6F8</color>
+
+    <!-- States -->
     <color name="op_on">#FF66BB6A</color>
+    <color name="op_on_container">#FF1B3A24</color>
+    <color name="op_error">#FFF44336</color>
+    <color name="op_error_container">#FF4A1D1D</color>
+    <color name="op_warning">#FFFFB74D</color>
+
+    <!-- Text & outlines -->
     <color name="op_text_primary">#FFF2F5F7</color>
     <color name="op_text_secondary">#FF9AA7B4</color>
+    <color name="op_outline">#FF334155</color>
+    <color name="op_divider">#26FFFFFF</color>
+
+    <!-- Icon / dot tints -->
+    <color name="op_icon_bg_on">#332D7DF6</color>
+    <color name="op_icon_bg_off">#22FFFFFF</color>
+    <color name="op_dot_on">#FF66BB6A</color>
+    <color name="op_dot_off">#FF546E7A</color>
 </resources>
