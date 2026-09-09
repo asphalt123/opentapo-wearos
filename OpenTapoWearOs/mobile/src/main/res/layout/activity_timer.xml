@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/op_background"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/menu_timers"
+            android:textColor="@color/op_text_primary"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/timer_exact_hint"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/timer_exact_hint"
+            android:textColor="@color/op_warning"
+            android:textSize="13sp"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/timer_exact_alarm"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/timer_exact_grant"
+            android:visibility="gone" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/timer_device_label"
+            android:textColor="@color/op_text_secondary"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/timer_device"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/timer_no_device"
+            android:textColor="@color/op_accent"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/timer_pick_device"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/timer_pick_device" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="@string/timer_countdown_title"
+            android:textColor="@color/op_text_primary"
+            android:textSize="17sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/timer_minutes"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="@string/timer_minutes_hint"
+                android:inputType="number"
+                android:textColor="@color/op_text_primary"
+                android:textColorHint="@color/op_text_secondary" />
+
+            <Switch
+                android:id="@+id/timer_countdown_on"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:text="@string/timer_target_on"
+                android:textColor="@color/op_text_primary" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/timer_start_countdown"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/timer_start" />
+
+        <TextView
+            android:id="@+id/timer_countdown_empty"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/timer_none"
+            android:textColor="@color/op_text_secondary"
+            android:textSize="13sp" />
+
+        <LinearLayout
+            android:id="@+id/timer_countdown_list"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="@string/schedule_title"
+            android:textColor="@color/op_text_primary"
+            android:textSize="17sp"
+            android:textStyle="bold" />
+
+        <TimePicker
+            android:id="@+id/timer_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:timePickerMode="spinner" />
+
+        <LinearLayout
+            android:id="@+id/timer_days"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:orientation="horizontal" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/schedule_days_hint"
+            android:textColor="@color/op_text_secondary"
+            android:textSize="12sp" />
+
+        <Switch
+            android:id="@+id/timer_daily_on"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/timer_target_on"
+            android:textColor="@color/op_text_primary" />
+
+        <Button
+            android:id="@+id/timer_add_daily"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/schedule_add" />
+
+        <TextView
+            android:id="@+id/timer_daily_empty"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/schedule_none"
+            android:textColor="@color/op_text_secondary"
+            android:textSize="13sp" />
+
+        <LinearLayout
+            android:id="@+id/timer_daily_list"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            android:orientation="vertical" />
+
+    </LinearLayout>
+</ScrollView>

@@ -17,6 +17,10 @@
         android:icon="@drawable/ic_tile"
         app:showAsAction="never" />
     <item
+        android:id="@+id/action_timers"
+        android:title="@string/menu_timers"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/action_logout"
         android:title="@string/logout"
         app:showAsAction="never" />

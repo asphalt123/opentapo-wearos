@@ -94,6 +94,10 @@ class MainActivity : AppCompatActivity() {
                     startActivity(Intent(this, dev.veeso.opentapo.mobile.tile.TileSettingsActivity::class.java))
                     true
                 }
+                R.id.action_timers -> {
+                    startActivity(Intent(this, dev.veeso.opentapo.mobile.timer.TimerActivity::class.java))
+                    true
+                }
                 else -> false
             }
         }

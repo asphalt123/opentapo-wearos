@@ -48,4 +48,45 @@
     <string name="tile_current">Favorite : %1$s (%2$s)</string>
     <string name="tile_clear">Retirer la favorite</string>
     <string name="menu_tile">Tuile rapide</string>
+    <!-- Notifications -->
+    <string name="notif_channel_timers">Minuteries</string>
+    <string name="notif_channel_monitor">Surveillance appareils</string>
+    <string name="notif_channel_persistent">Statut persistant</string>
+    <!-- Minuteries -->
+    <string name="menu_timers">Minuteries</string>
+    <string name="timer_pick_device">Choisir l\'appareil</string>
+    <string name="timer_device_label">Appareil concerné</string>
+    <string name="timer_no_device">Aucun appareil choisi</string>
+    <string name="timer_need_device">Choisis d\'abord un appareil</string>
+    <string name="timer_countdown_title">Extinction / allumage dans X minutes</string>
+    <string name="timer_minutes_hint">Minutes (ex : 30)</string>
+    <string name="timer_target_on">Allumer (sinon éteindre)</string>
+    <string name="timer_start">Démarrer la minuterie</string>
+    <string name="timer_bad_minutes">Entre 1 et 10080 minutes</string>
+    <string name="timer_started">Minuterie démarrée (%1$d min)</string>
+    <string name="timer_none">Aucune minuterie active.</string>
+    <string name="timer_row">%1$s → %2$s (dans %3$s)</string>
+    <string name="timer_row_firing">%1$s → déclenchement…</string>
+    <string name="timer_remaining_hm">%1$dh %2$dmin</string>
+    <string name="timer_remaining_m">%1$d min</string>
+    <string name="timer_expired_title">Minuterie : %1$s</string>
+    <string name="timer_expired_text">%1$s est maintenant %2$s.</string>
+    <string name="timer_failed_text">Impossible de piloter %1$s (hors ligne ?). La minuterie a expiré.</string>
+    <string name="timer_exact_hint">Pour des déclenchements à l\'heure exacte, autorise les alarmes exactes pour OpenTapo.</string>
+    <string name="timer_exact_grant">Autoriser les alarmes exactes</string>
+    <string name="schedule_title">Horaires récurrents</string>
+    <string name="schedule_add">Ajouter l\'horaire</string>
+    <string name="schedule_added">Horaire ajouté</string>
+    <string name="schedule_none">Aucun horaire programmé.</string>
+    <string name="schedule_every_day">tous les jours</string>
+    <string name="schedule_days_hint">Aucun jour = tous les jours. Ex : éteindre à 23h tous les jours.</string>
+    <string name="schedule_row">%1$s → %2$s à %3$s (%4$s)</string>
+    <string name="schedule_fired_title">Programmation : %1$s</string>
+    <string name="day_mon">Lun</string>
+    <string name="day_tue">Mar</string>
+    <string name="day_wed">Mer</string>
+    <string name="day_thu">Jeu</string>
+    <string name="day_fri">Ven</string>
+    <string name="day_sat">Sam</string>
+    <string name="day_sun">Dim</string>
 </resources>
