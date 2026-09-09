@@ -25,6 +25,10 @@
         android:title="@string/menu_energy"
         app:showAsAction="never" />
     <item
+        android:id="@+id/action_monitor"
+        android:title="@string/menu_monitor"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/action_logout"
         android:title="@string/logout"
         app:showAsAction="never" />

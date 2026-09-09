@@ -104,4 +104,21 @@
     <string name="energy_month">Mois : %.2f kWh</string>
     <string name="energy_unavailable">Compteur indisponible</string>
     <string name="energy_no_data">Pas encore de mesures</string>
+    <!-- Surveillance hors-ligne -->
+    <string name="menu_monitor">Surveillance</string>
+    <string name="monitor_hint">Vérifie périodiquement chaque prise en local (KLAP) et t\'alerte si elle devient injoignable, revient en ligne ou change d\'état sans passer par l\'app.</string>
+    <string name="monitor_enabled">Activer la surveillance</string>
+    <string name="monitor_persistent">Notification persistante (prises allumées)</string>
+    <string name="monitor_interval_title">Fréquence de vérification (minutes)</string>
+    <string name="monitor_interval_value">Vérification toutes les %1$d min</string>
+    <string name="monitor_check_now">Vérifier maintenant</string>
+    <string name="monitor_checking">Vérification en cours…</string>
+    <string name="monitor_offline_title">Hors ligne : %1$s</string>
+    <string name="monitor_offline_text">%1$s ne répond plus en local. Vérifie son alimentation et ton Wi-Fi.</string>
+    <string name="monitor_back_title">De retour : %1$s</string>
+    <string name="monitor_back_text">%1$s répond de nouveau en local.</string>
+    <string name="monitor_changed_title">Changement inattendu : %1$s</string>
+    <string name="monitor_changed_text">%1$s est maintenant %2$s (changé hors de l\'app).</string>
+    <string name="monitor_persistent_title">OpenTapo</string>
+    <string name="monitor_persistent_text">%1$d/%2$d allumée(s) • %3$d hors ligne</string>
 </resources>

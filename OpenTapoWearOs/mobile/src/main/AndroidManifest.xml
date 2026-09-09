@@ -50,6 +50,10 @@
             android:exported="false"
             android:theme="@style/Theme.OpenTapoMobile" />
         <activity
+            android:name=".monitor.MonitorSettingsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.OpenTapoMobile" />
+        <activity
             android:name=".energy.EnergyActivity"
             android:exported="true"
             android:theme="@style/Theme.OpenTapoMobile">
@@ -59,6 +63,18 @@
             </intent-filter>
         </activity>
 
+        <receiver android:name=".monitor.DeviceMonitorReceiver" android:exported="false">
+            <intent-filter>
+                <action android:name="dev.veeso.opentapo.mobile.monitor.CHECK" />
+            </intent-filter>
+        </receiver>
+        <receiver android:name=".monitor.MonitorBootReceiver" android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
         <receiver android:name=".timer.TimerReceiver" android:exported="false" />
         <receiver android:name=".timer.TimerBootReceiver" android:exported="false">
             <intent-filter>

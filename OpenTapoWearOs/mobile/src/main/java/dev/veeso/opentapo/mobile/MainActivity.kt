@@ -107,6 +107,10 @@ class MainActivity : AppCompatActivity() {
                     startActivityForResult(pick, REQUEST_ENERGY_PICK)
                     true
                 }
+                R.id.action_monitor -> {
+                    startActivity(Intent(this, dev.veeso.opentapo.mobile.monitor.MonitorSettingsActivity::class.java))
+                    true
+                }
                 else -> false
             }
         }
@@ -159,6 +163,8 @@ class MainActivity : AppCompatActivity() {
             // case where the watch pushed while the phone app was closed)
             pullDevicesFromDataLayer()
             discover()
+            dev.veeso.opentapo.mobile.monitor.DeviceMonitorScheduler.schedule(this)
+            dev.veeso.opentapo.mobile.monitor.DeviceMonitorReceiver.refreshPersistent(this)
         }
     }
 
