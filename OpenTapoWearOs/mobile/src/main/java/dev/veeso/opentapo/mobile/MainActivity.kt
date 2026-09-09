@@ -102,9 +102,11 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        adapter = DeviceAdapter(devices) { device, newState ->
+        adapter = DeviceAdapter(devices, { device, newState ->
             toggleDevice(device, newState)
-        }
+        }, { device ->
+            openDeviceControl(device)
+        })
 
         val list: RecyclerView = findViewById(R.id.device_list)
         list.layoutManager = LinearLayoutManager(this)
@@ -218,6 +220,14 @@ class MainActivity : AppCompatActivity() {
         val intent = Intent(this, AddDeviceActivity::class.java)
         intent.putExtra(AddDeviceActivity.EXTRA_CREDENTIALS, credentials)
         startActivityForResult(intent, REQUEST_ADD_DEVICE)
+        overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
+    }
+
+    /** Opens the per-device screen (brightness/color/energy for supported models). */
+    private fun openDeviceControl(device: dev.veeso.opentapo.mobile.tapo.device.Device) {
+        val intent = Intent(this, dev.veeso.opentapo.mobile.control.DeviceControlActivity::class.java)
+        intent.putExtra(dev.veeso.opentapo.mobile.control.DeviceControlActivity.EXTRA_DEVICE_ID, device.id)
+        startActivity(intent)
         overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
     }
 

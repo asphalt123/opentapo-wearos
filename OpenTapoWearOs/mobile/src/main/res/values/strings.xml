@@ -89,4 +89,12 @@
     <string name="day_fri">Ven</string>
     <string name="day_sat">Sam</string>
     <string name="day_sun">Dim</string>
+    <!-- Contrôle appareil -->
+    <string name="control_power">Alimentation</string>
+    <string name="control_brightness_value">Luminosité : %1$d %%</string>
+    <string name="control_color_title">Couleur</string>
+    <string name="control_color_hint">Touche la roue pour choisir, relâche pour envoyer.</string>
+    <string name="control_color_value">Couleur : teinte %1$d, saturation %2$d</string>
+    <string name="control_temp_value">Blanc : %1$d K</string>
+    <string name="menu_energy">Consommation</string>
 </resources>

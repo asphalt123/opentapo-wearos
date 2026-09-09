@@ -17,7 +17,8 @@ import dev.veeso.opentapo.mobile.tapo.device.DeviceType
 
 class DeviceAdapter(
     private val devices: List<Device>,
-    private val onToggle: (Device, Boolean) -> Unit
+    private val onToggle: (Device, Boolean) -> Unit,
+    private val onOpen: (Device) -> Unit = {}
 ) : RecyclerView.Adapter<DeviceAdapter.Holder>() {
 
     private var suppress = false
@@ -76,11 +77,7 @@ class DeviceAdapter(
         }
         holder.card.setOnClickListener {
             pulse(holder.card)
-            suppress = true
-            holder.power.isChecked = !holder.power.isChecked
-            val checked = holder.power.isChecked
-            suppress = false
-            onToggle(device, checked)
+            onOpen(device)
         }
 
         // Entrance animation (fade + scale) only for newly revealed rows.

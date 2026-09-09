@@ -45,6 +45,10 @@
             android:name=".timer.TimerActivity"
             android:exported="false"
             android:theme="@style/Theme.OpenTapoMobile" />
+        <activity
+            android:name=".control.DeviceControlActivity"
+            android:exported="false"
+            android:theme="@style/Theme.OpenTapoMobile" />
 
         <receiver android:name=".timer.TimerReceiver" android:exported="false" />
         <receiver android:name=".timer.TimerBootReceiver" android:exported="false">
