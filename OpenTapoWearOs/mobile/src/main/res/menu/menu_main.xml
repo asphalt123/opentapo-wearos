@@ -45,6 +45,10 @@
         android:title="@string/menu_voice"
         app:showAsAction="never" />
     <item
+        android:id="@+id/action_backup"
+        android:title="@string/menu_backup"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/action_logout"
         android:title="@string/logout"
         app:showAsAction="never" />

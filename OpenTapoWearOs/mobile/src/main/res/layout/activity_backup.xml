@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/op_background"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/menu_backup"
+            android:textColor="@color/op_text_primary"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/backup_hint"
+            android:textColor="@color/op_text_secondary"
+            android:textSize="13sp" />
+
+        <EditText
+            android:id="@+id/backup_passphrase"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:hint="@string/backup_passphrase_hint"
+            android:inputType="textPassword"
+            android:textColor="@color/op_text_primary"
+            android:textColorHint="@color/op_text_secondary" />
+
+        <Button
+            android:id="@+id/backup_export"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="@string/backup_export" />
+
+        <Button
+            android:id="@+id/backup_import"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/backup_import" />
+
+        <Button
+            android:id="@+id/backup_share"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/backup_share" />
+
+        <TextView
+            android:id="@+id/backup_status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="24dp"
+            android:textColor="@color/op_accent"
+            android:textSize="14sp" />
+
+    </LinearLayout>
+</ScrollView>

@@ -127,6 +127,10 @@ class MainActivity : AppCompatActivity() {
                     startActivity(Intent(this, dev.veeso.opentapo.mobile.voice.VoiceHelpActivity::class.java))
                     true
                 }
+                R.id.action_backup -> {
+                    startActivity(Intent(this, dev.veeso.opentapo.mobile.backup.BackupActivity::class.java))
+                    true
+                }
                 else -> false
             }
         }

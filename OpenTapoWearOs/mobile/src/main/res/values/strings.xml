@@ -192,4 +192,16 @@
     <string name="voice_all_on">Tout allumer</string>
     <string name="voice_all_off">Tout éteindre</string>
     <string name="voice_shortcut_long">%1$s — passer à %2$s</string>
+    <!-- Backup/Restore -->
+    <string name="menu_backup">Sauvegarde</string>
+    <string name="backup_hint">Exporte appareils, groupes, zones GPS, minuteries et comptes (mots de passe chiffrés avec ta phrase) vers un fichier JSON. Pour partager : envoie le fichier + la phrase par deux canaux séparés.</string>
+    <string name="backup_passphrase_hint">Phrase secrète (min. 4 caractères)</string>
+    <string name="backup_need_passphrase">Choisis une phrase secrète d\'au moins 4 caractères</string>
+    <string name="backup_export">Exporter vers un fichier</string>
+    <string name="backup_import">Restaurer depuis un fichier</string>
+    <string name="backup_share">Partager le dernier export</string>
+    <string name="backup_share_subject">Sauvegarde OpenTapo</string>
+    <string name="backup_export_first">Exporte d\'abord la sauvegarde</string>
+    <string name="backup_exported">Sauvegarde exportée</string>
+    <string name="backup_imported">Sauvegarde restaurée (%1$d compte(s)) — rescan en cours…</string>
 </resources>

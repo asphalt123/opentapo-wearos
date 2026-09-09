@@ -60,6 +60,10 @@
             android:exported="false"
             android:theme="@style/Theme.OpenTapoMobile" />
         <activity
+            android:name=".backup.BackupActivity"
+            android:exported="false"
+            android:theme="@style/Theme.OpenTapoMobile" />
+        <activity
             android:name=".voice.VoiceHelpActivity"
             android:exported="false"
             android:theme="@style/Theme.OpenTapoMobile" />
@@ -178,6 +182,16 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/device_widget_info" />
         </receiver>
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/filepaths" />
+        </provider>
 
         <service
             android:name=".DeviceSyncListenerService"
