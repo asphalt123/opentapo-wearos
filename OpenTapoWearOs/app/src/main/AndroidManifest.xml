@@ -46,6 +46,36 @@
         <activity
             android:name=".NewGroupActivity"
             android:exported="true" />
+        <activity
+            android:name=".complication.ComplicationConfigActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="dev.veeso.opentapowearos.complication.CONFIG" />
+                <category android:name="android.support.wearable.complications.category.PROVIDER_CONFIG" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".complication.ComplicationToggleActivity"
+            android:exported="false"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+        <service
+            android:name=".complication.PlugComplicationService"
+            android:exported="true"
+            android:permission="com.google.android.wearable.permission.BIND_COMPLICATION_PROVIDER">
+            <intent-filter>
+                <action android:name="androidx.wear.watchface.complications.datasource.ComplicationDataSourceService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.support.wearable.complications.SUPPORTED_TYPES"
+                android:value="SHORT_TEXT,LONG_TEXT" />
+            <meta-data
+                android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS"
+                android:value="300" />
+            <meta-data
+                android:name="android.support.wearable.complications.PROVIDER_CONFIG_ACTION"
+                android:value="dev.veeso.opentapowearos.complication.CONFIG" />
+        </service>
         <service
             android:name=".DataLayerListenerService"
             android:exported="true">

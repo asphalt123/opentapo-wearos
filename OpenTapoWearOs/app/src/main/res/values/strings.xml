@@ -46,4 +46,7 @@
     <string name="device_setup_activity_loading_reachable">Trying to connect to provided host</string>
     <string name="device_setup_activity_loading_setup">Trying to setup device</string>
     <string name="device_setup_activity_disclaimer">Requires "Third-Party Compatibility" enabled in the official Tapo app (Profile → Settings). Without it, devices refuse local connections.</string>
+    <string name="complication_config_title">Complication : quelle prise ?</string>
+    <string name="complication_config_hint">La complication affiche l\'état de cette prise sur ton cadran. Touche la complication pour l\'allumer / l\'éteindre.</string>
+    <string name="complication_no_device">Aucune prise connue — ouvre OpenTapo et scanne d\'abord.</string>
 </resources>

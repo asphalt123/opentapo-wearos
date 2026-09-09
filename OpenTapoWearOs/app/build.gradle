@@ -9,12 +9,12 @@ apply plugin: 'kotlinx-serialization'
 
 android {
     namespace 'dev.veeso.opentapowearos'
-    compileSdk 32
+    compileSdk 33
 
     defaultConfig {
         applicationId "dev.veeso.opentapowearos"
         minSdk 30
-        targetSdk 32
+        targetSdk 33
         // version code "xxxx" (major, minor, patch, build). e.g. 0.2.1 1st build is (0)210
         versionCode 205
         versionName "0.2.0"
@@ -55,6 +55,8 @@ dependencies {
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'androidx.recyclerview:recyclerview:1.2.1'
     implementation 'androidx.wear:wear:1.2.0'
+    implementation 'androidx.wear.watchface:watchface-complications-data:1.1.1'
+    implementation 'androidx.wear.watchface:watchface-complications-data-source-ktx:1.1.1'
     implementation 'io.ktor:ktor-client-core:2.2.2'
     implementation "io.ktor:ktor-client-android:2.2.2"
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4'
