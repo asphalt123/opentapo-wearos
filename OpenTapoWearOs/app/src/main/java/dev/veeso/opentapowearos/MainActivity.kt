@@ -60,12 +60,28 @@ class MainActivity : Activity() {
         }
     }
 
+    private val devicesReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            val devicesJson = intent?.getStringExtra(DataLayerListenerService.EXTRA_DEVICES_JSON)
+            if (!devicesJson.isNullOrEmpty()) {
+                applySyncedDevicesJson(devicesJson, "broadcast")
+            }
+        }
+    }
+
     // credentials
     private var credentials: Credentials? = null
 
     // devices
     private var devices: MutableList<Device> = mutableListOf()
     private var deviceGroups: DeviceGroups = DeviceGroups()
+
+    // Device-list sync guards: applyingRemoteDevices suppresses echo pushes
+    // while merging a phone-pushed list; last*Json dedupes re-deliveries
+    // (background service + foreground listeners often both fire).
+    private var applyingRemoteDevices = false
+    private var lastPushedDevicesJson: String? = null
+    private var lastAppliedDevicesJson: String? = null
 
     // network
     private var deviceNetwork: Pair<String, String>? = null
@@ -94,11 +110,16 @@ class MainActivity : Activity() {
             credentialsReceiver,
             IntentFilter("dev.veeso.opentapowearos.CREDENTIALS_UPDATED")
         )
+        registerReceiver(
+            devicesReceiver,
+            IntentFilter(DataLayerListenerService.ACTION_DEVICES_UPDATED)
+        )
     }
 
     override fun onDestroy() {
         super.onDestroy()
         unregisterReceiver(credentialsReceiver)
+        unregisterReceiver(devicesReceiver)
     }
 
     override fun onResume() {
@@ -111,6 +132,10 @@ class MainActivity : Activity() {
 
         // get groups
         this.getDeviceGroups()
+
+        // pull device list synced from the phone (persistent DataItem covers
+        // the case where the phone pushed while the watch app was closed)
+        pullDevicesFromDataLayer()
 
         // get credentials
         if (this.credentials == null) {
@@ -229,6 +254,7 @@ class MainActivity : Activity() {
         }
         saveManualIp(device.ipAddress)
         setCachedDeviceList()
+        pushDevicesToMobile()
         setActivityState(ActivityState.DEVICE_LIST)
     }
 
@@ -319,16 +345,30 @@ class MainActivity : Activity() {
         Log.d(TAG, "foreground onDataChanged events=${events.count}")
         for (event in events) {
             if (event.type != DataEvent.TYPE_CHANGED) continue
-            if (event.dataItem.uri.path != "/opentapo/credentials") continue
-            try {
-                val dm = DataMapItem.fromDataItem(event.dataItem).dataMap
-                val username = dm.getString("username", "")
-                val password = dm.getString("password", "")
-                if (username.isNotEmpty() && password.isNotEmpty()) {
-                    applySyncedCredentials(username, password, "data-foreground")
+            when (event.dataItem.uri.path) {
+                "/opentapo/credentials" -> {
+                    try {
+                        val dm = DataMapItem.fromDataItem(event.dataItem).dataMap
+                        val username = dm.getString("username", "")
+                        val password = dm.getString("password", "")
+                        if (username.isNotEmpty() && password.isNotEmpty()) {
+                            applySyncedCredentials(username, password, "data-foreground")
+                        }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "foreground onDataChanged failed: $e")
+                    }
                 }
-            } catch (e: Exception) {
-                Log.e(TAG, "foreground onDataChanged failed: $e")
+                DeviceSync.DEVICES_PATH -> {
+                    try {
+                        val dm = DataMapItem.fromDataItem(event.dataItem).dataMap
+                        val devicesJson = dm.getString(DeviceSync.KEY_DEVICES_JSON, "")
+                        if (!devicesJson.isNullOrEmpty()) {
+                            applySyncedDevicesJson(devicesJson, "data-foreground")
+                        }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "foreground devices onDataChanged failed: $e")
+                    }
+                }
             }
         }
     }
@@ -336,10 +376,16 @@ class MainActivity : Activity() {
     /** Foreground MessageClient listener: same path, direct push fallback. */
     private fun onMessageWhileForeground(event: MessageEvent) {
         Log.d(TAG, "foreground onMessageReceived path=${event.path}")
-        if (event.path != "/opentapo/credentials") return
-        val parts = String(event.data, Charsets.UTF_8).split("\n")
-        if (parts.size >= 2 && parts[0].isNotEmpty() && parts[1].isNotEmpty()) {
-            applySyncedCredentials(parts[0], parts[1], "message-foreground")
+        if (event.path == "/opentapo/credentials") {
+            val parts = String(event.data, Charsets.UTF_8).split("\n")
+            if (parts.size >= 2 && parts[0].isNotEmpty() && parts[1].isNotEmpty()) {
+                applySyncedCredentials(parts[0], parts[1], "message-foreground")
+            }
+        } else if (event.path == DeviceSync.DEVICES_PATH) {
+            val devicesJson = String(event.data, Charsets.UTF_8)
+            if (devicesJson.isNotEmpty()) {
+                applySyncedDevicesJson(devicesJson, "message-foreground")
+            }
         }
     }
 
@@ -409,19 +455,131 @@ class MainActivity : Activity() {
         }
     }
 
+    // -- device-list sync (phone <-> watch) ----------------------------------
+
+    /**
+     * Merges a phone-pushed device list into the in-memory list and cache.
+     * Remote entries win on id conflict (the sender just scanned or added
+     * them, so its IPs are fresher); local-only entries are kept.
+     */
+    private fun applySyncedDevicesJson(devicesJson: String, source: String) {
+        if (devicesJson == lastAppliedDevicesJson) {
+            Log.d(TAG, "applySyncedDevices via $source: already applied; skipping")
+            return
+        }
+        val remote = try {
+            DeviceSync.devicesFromJson(devicesJson)
+        } catch (e: Exception) {
+            Log.e(TAG, "applySyncedDevices via $source: decode failed: $e")
+            return
+        }
+        if (remote.isEmpty()) {
+            Log.d(TAG, "applySyncedDevices via $source: empty list; ignoring")
+            return
+        }
+        Log.d(TAG, "applySyncedDevices via $source: merging ${remote.size} remote device(s)")
+        applyingRemoteDevices = true
+        try {
+            lastAppliedDevicesJson = devicesJson
+            // don't echo back what we just received
+            lastPushedDevicesJson = devicesJson
+            val merged = mutableListOf<Device>()
+            val seenIds = mutableSetOf<String>()
+            remote.forEach {
+                merged.add(it)
+                seenIds.add(it.id)
+            }
+            devices.filter { !seenIds.contains(it.id) }.forEach {
+                merged.add(it)
+                seenIds.add(it.id)
+            }
+            devices.clear()
+            devices.addAll(merged)
+            setCachedDeviceList()
+            if (credentials != null) {
+                if (devices.isNotEmpty()) {
+                    setActivityState(ActivityState.DEVICE_LIST)
+                }
+                reloadDeviceState()
+            } else {
+                Log.d(TAG, "applySyncedDevices: cached ${devices.size} device(s), waiting for credentials")
+            }
+        } finally {
+            applyingRemoteDevices = false
+        }
+    }
+
+    /**
+     * Pulls an already-synced device list from the Data Layer. Handles the
+     * case where the phone pushed while the watch app was closed (no change
+     * event fires for a pre-existing DataItem).
+     */
+    private fun pullDevicesFromDataLayer() {
+        Log.d(TAG, "Pulling devices from Wear Data Layer")
+        GlobalScope.launch(Dispatchers.IO) {
+            try {
+                val client = Wearable.getDataClient(this@MainActivity)
+                val uri = Uri.parse("wear://*" + DeviceSync.DEVICES_PATH)
+                val buffer = Tasks.await(client.getDataItems(uri))
+                try {
+                    for (item in buffer) {
+                        if (item.uri.path == DeviceSync.DEVICES_PATH) {
+                            val dm = DataMapItem.fromDataItem(item).dataMap
+                            val devicesJson = dm.getString(DeviceSync.KEY_DEVICES_JSON, "")
+                            if (!devicesJson.isNullOrEmpty()) {
+                                runOnUiThread { applySyncedDevicesJson(devicesJson, "data-pull") }
+                                break
+                            }
+                        }
+                    }
+                } finally {
+                    buffer.close()
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to pull devices from Wear Data Layer: $e")
+            }
+        }
+    }
+
+    /**
+     * Pushes the current (locally enriched) device list to the phone.
+     * No-op while applying a remote list (echo guard), when empty (never wipe
+     * the peer's list from a fresh/empty state), or when unchanged.
+     */
+    private fun pushDevicesToMobile() {
+        if (applyingRemoteDevices) return
+        if (devices.isEmpty()) return
+        val devicesJson = try {
+            DeviceSync.devicesToJson(devices)
+        } catch (e: Exception) {
+            Log.e(TAG, "pushDevicesToMobile: encode failed: $e")
+            return
+        }
+        if (devicesJson == lastPushedDevicesJson) return
+        lastPushedDevicesJson = devicesJson
+        lastAppliedDevicesJson = devicesJson
+        Log.d(TAG, "Pushing ${devices.size} device(s) to mobile")
+        SyncHelper.sendDevicesToMobile(this, devicesJson)
+    }
+
     private fun onCredentials() {
         try {
             startPeriodicRefresh()
-            val cachedDevices = getCachedDeviceAddressList()
             if (this.devices.isNotEmpty()) {
                 Log.d(TAG, "Credentials are set and devices too; reloading device state...")
                 reloadDeviceState()
-            } else if (cachedDevices != null && cachedDevices.isNotEmpty()) {
-                Log.d(TAG, "Cached devices is NOT empty; discover devices")
-                discoverDevices()
             } else {
-                // set no device
-                setActivityState(ActivityState.NO_DEVICE_FOUND)
+                // Always run discovery when credentials are set and we have no
+                // in-memory devices. Previously this only scanned when a cache
+                // existed, so a fresh watch (empty cache) stayed on
+                // NO_DEVICE_FOUND forever and never scanned the LAN.
+                Log.d(TAG, "Credentials are set; discovering devices (cache fallback inside)")
+                setActivityState(ActivityState.LOADING_DEVICE_LIST)
+                GlobalScope.launch {
+                    withContext(Dispatchers.IO) {
+                        discoverDevices()
+                    }
+                }
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -473,8 +631,11 @@ class MainActivity : Activity() {
                 // keep the current list until a scan produces results; never wipe
                 // devices on a failed scan (fixes disappearing devices)
                 val previousDevices = devices.toList()
-                val cachedDeviceList = getCachedDeviceAddressList()
-                if ((cachedDeviceList == null || cachedDeviceList.isEmpty()) && deviceNetwork == null) {
+                // Without a resolved network, always go through the Wi-Fi path
+                // first (it tries a synchronous lookup, then requests Wi-Fi).
+                // Probing discoverDevicesOnLocalNetwork() with a null network
+                // would just throw "No link" and never resolve Wi-Fi.
+                if (deviceNetwork == null) {
                     // do scan with wifi
                     discoverDevicesOnLocalNetworkWithWifi()
                 } else {
@@ -557,6 +718,8 @@ class MainActivity : Activity() {
         Log.d(TAG, String.format("Found %d devices after merge", this.devices.size))
         // cache devices
         setCachedDeviceList()
+        // share with the phone (no-op when empty/unchanged/applying remote)
+        pushDevicesToMobile()
         // set activity state
         if (devices.isNotEmpty()) {
             setActivityState(ActivityState.DEVICE_LIST)
@@ -574,10 +737,24 @@ class MainActivity : Activity() {
         val connectivityManager: ConnectivityManager =
             getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
+        // Fast path: Wi-Fi may already be up; scan it synchronously instead of
+        // waiting for a NetworkCallback (which also leaks if never unregistered).
+        try {
+            deviceNetwork = getDeviceNetworkAddresses()
+            discoverDevicesOnLocalNetwork()
+            return
+        } catch (e: Exception) {
+            Log.d(TAG, String.format("No usable network yet, requesting Wi-Fi: %s", e.message))
+        }
+
         val callback = object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {
                 super.onAvailable(network)
                 Log.d(TAG, "Wifi available")
+                try {
+                    connectivityManager.unregisterNetworkCallback(this)
+                } catch (_: Exception) {
+                }
 
                 try {
                     deviceNetwork = getDeviceNetworkAddresses()
@@ -589,6 +766,16 @@ class MainActivity : Activity() {
                 }
                 discoverDevicesOnLocalNetwork()
             }
+
+            override fun onUnavailable() {
+                super.onUnavailable()
+                Log.e(TAG, "Wi-Fi network unavailable")
+                try {
+                    connectivityManager.unregisterNetworkCallback(this)
+                } catch (_: Exception) {
+                }
+                setActivityState(ActivityState.NO_LINK)
+            }
         }
 
         connectivityManager.requestNetwork(
@@ -597,31 +784,51 @@ class MainActivity : Activity() {
         )
     }
 
+    /**
+     * Returns (ip, netmask) of the Wi-Fi network.
+     *
+     * Mirrors the phone's localNetwork(): scores each interface so the Wi-Fi
+     * interface carrying internet wins. The previous implementation returned
+     * the first IPv4 across allNetworks in arbitrary order — on WearOS that
+     * is often the Bluetooth PAN (proxy link to the phone) or loopback,
+     * which made the scan probe the wrong subnet and find nothing.
+     */
     private fun getDeviceNetworkAddresses(): Pair<String, String> {
         val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE)
 
         if (connectivityManager is ConnectivityManager) {
-            val networks = connectivityManager.allNetworks
-            // pick the first network that has an IPv4 link address (the old code
-            // blindly took the last network and address index 1, which crashes
-            // or returns the wrong interface depending on device setup)
-            for (network in networks) {
+            var best: Pair<String, String>? = null
+            var bestScore = Int.MIN_VALUE
+            for (network in connectivityManager.allNetworks) {
+                val caps = connectivityManager.getNetworkCapabilities(network) ?: continue
                 val link = connectivityManager.getLinkProperties(network) ?: continue
+                var score = 0
+                if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) score += 10
+                if (caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) score += 5
                 for (linkAddress in link.linkAddresses) {
                     val address = linkAddress.address
-                    if (address is Inet4Address) {
-                        val netmask = NetworkUtils.cidrToNetmask(linkAddress.prefixLength)
-                        Log.d(
-                            TAG,
-                            String.format(
-                                "Found local device address %s and netmask %s",
-                                address.hostAddress,
-                                netmask
+                    if (address is Inet4Address && !address.isLoopbackAddress) {
+                        if (score > bestScore) {
+                            bestScore = score
+                            best = Pair(
+                                address.hostAddress!!,
+                                NetworkUtils.cidrToNetmask(linkAddress.prefixLength)
                             )
-                        )
-                        return Pair(address.hostAddress!!, netmask)
+                        }
                     }
                 }
+            }
+            if (best != null) {
+                Log.d(
+                    TAG,
+                    String.format(
+                        "Found local device address %s and netmask %s (score=%d)",
+                        best.first,
+                        best.second,
+                        bestScore
+                    )
+                )
+                return best
             }
         }
 

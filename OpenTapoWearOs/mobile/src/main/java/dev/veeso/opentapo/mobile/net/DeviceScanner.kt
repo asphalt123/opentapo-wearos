@@ -23,27 +23,30 @@ class DeviceScanner(username: String, password: String) {
     }
 
     private fun doScanNetwork(addressToFetch: List<Inet4Address>) {
-        // bounded thread pool: spawning 250+ threads at once can starve a
-        // low-power device before the scan completes
-        val workers = addressToFetch.map { DeviceScannerWorker(it, username, password) }
-        val threads = workers.map {
-            Thread(it).also { t ->
-                t.priority = Thread.MIN_PRIORITY
-                t.start()
+        // Truly bounded scan: start at most MAX_CONCURRENT_THREADS workers,
+        // wait for the batch, then start the next one. (Spawning 250+ threads
+        // at once can starve a low-power device before the scan completes.)
+        var offset = 0
+        while (offset < addressToFetch.size) {
+            val end = minOf(offset + MAX_CONCURRENT_THREADS, addressToFetch.size)
+            val batch = addressToFetch.subList(offset, end).map {
+                DeviceScannerWorker(it, username, password)
             }
-        }
-        var started = 0
-        while (started < threads.size) {
-            val batch = threads.subList(started, minOf(started + MAX_CONCURRENT_THREADS, threads.size))
-            batch.forEach { it.join() }
-            started += batch.size
-            Log.d(TAG, String.format("Scan progress: %d/%d addresses probed", started, threads.size))
-        }
-        // get devices
-        workers.forEach {
-            if (it.device != null) {
-                this.devices.add(it.device!!)
+            val threads = batch.map {
+                Thread(it).also { t ->
+                    t.priority = Thread.MIN_PRIORITY
+                    t.start()
+                }
             }
+            threads.forEach { it.join() }
+            offset = end
+            // get devices
+            batch.forEach {
+                if (it.device != null) {
+                    this.devices.add(it.device!!)
+                }
+            }
+            Log.d(TAG, String.format("Scan progress: %d/%d addresses probed", offset, addressToFetch.size))
         }
         Log.d(TAG, String.format("Scan terminated; found %d devices", this.devices.size))
     }

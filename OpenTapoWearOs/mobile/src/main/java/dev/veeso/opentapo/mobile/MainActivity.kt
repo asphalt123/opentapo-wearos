@@ -2,6 +2,9 @@ package dev.veeso.opentapo.mobile
 
 import android.content.Context
 import android.content.Intent
+import android.content.BroadcastReceiver
+import android.content.IntentFilter
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -12,6 +15,14 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.google.android.gms.tasks.Tasks
+import com.google.android.gms.wearable.DataClient
+import com.google.android.gms.wearable.DataEvent
+import com.google.android.gms.wearable.DataEventBuffer
+import com.google.android.gms.wearable.DataMapItem
+import com.google.android.gms.wearable.MessageClient
+import com.google.android.gms.wearable.MessageEvent
+import com.google.android.gms.wearable.Wearable
 import com.google.android.material.appbar.MaterialToolbar
 import dev.veeso.opentapo.mobile.net.DeviceScanner
 import dev.veeso.opentapo.mobile.net.NetworkUtils
@@ -29,6 +40,29 @@ class MainActivity : AppCompatActivity() {
     private lateinit var refreshLayout: SwipeRefreshLayout
     private lateinit var emptyView: TextView
     private lateinit var progress: ProgressBar
+
+    // Device-list sync guards: applyingRemoteDevices suppresses echo pushes
+    // while merging a watch-pushed list; last*Json dedupes re-deliveries
+    // (background service + foreground listeners often both fire).
+    private var applyingRemoteDevices = false
+    private var lastPushedDevicesJson: String? = null
+    private var lastAppliedDevicesJson: String? = null
+
+    private val devicesReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            val devicesJson = intent?.getStringExtra(DeviceSyncListenerService.EXTRA_DEVICES_JSON)
+            if (!devicesJson.isNullOrEmpty()) {
+                applySyncedDevicesJson(devicesJson, "broadcast")
+            }
+        }
+    }
+
+    private val dataListener = DataClient.OnDataChangedListener { events ->
+        onDataChangedWhileForeground(events)
+    }
+    private val messageListener = MessageClient.OnMessageReceivedListener { event ->
+        onMessageWhileForeground(event)
+    }
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
@@ -73,6 +107,12 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, LoginActivity::class.java))
             finish()
         } else {
+            Wearable.getDataClient(this).addListener(dataListener)
+            Wearable.getMessageClient(this).addListener(messageListener)
+            registerReceiver(devicesReceiver, IntentFilter(DeviceSyncListenerService.ACTION_DEVICES_UPDATED))
+            // pull a watch-pushed list first (persistent DataItem covers the
+            // case where the watch pushed while the phone app was closed)
+            pullDevicesFromDataLayer()
             discover()
         }
     }
@@ -111,6 +151,18 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         scope.cancel()
+        try {
+            Wearable.getDataClient(this).removeListener(dataListener)
+        } catch (_: Exception) {
+        }
+        try {
+            Wearable.getMessageClient(this).removeListener(messageListener)
+        } catch (_: Exception) {
+        }
+        try {
+            unregisterReceiver(devicesReceiver)
+        } catch (_: Exception) {
+        }
         super.onDestroy()
     }
 
@@ -162,8 +214,18 @@ class MainActivity : AppCompatActivity() {
                     scanner.devices
                 }
                 Log.i(TAG, "Scan complete: ${scanned.size} device(s) found")
+                // merge with the watch-synced cache so devices pushed from the
+                // watch appear even if this scan missed them; fresh scan wins
+                // on id conflict (its IPs are the most recent)
+                val cached = loadCachedDevices()
+                val merged = mutableListOf<Device>()
+                val seen = mutableSetOf<String>()
+                scanned.forEach { merged.add(it); seen.add(it.id) }
+                cached.filter { !seen.contains(it.id) }.forEach { merged.add(it); seen.add(it.id) }
                 devices.clear()
-                devices.addAll(scanned.sortedBy { it.alias })
+                devices.addAll(merged.sortedBy { it.alias })
+                persistDevices()
+                pushDevicesToWear()
                 adapter.notifyDataSetChanged()
                 emptyView.visibility = if (devices.isEmpty()) View.VISIBLE else View.GONE
                 if (devices.isEmpty()) {
@@ -184,8 +246,161 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    /** Returns (ip, netmask) of the wifi network, or null when unavailable. */
-    private fun localNetwork(): Pair<String, String>? {
+    // -- device-list sync (phone <-> watch) ----------------------------------
+
+    private fun onDataChangedWhileForeground(events: DataEventBuffer) {
+        Log.d(TAG, "foreground onDataChanged events=${events.count}")
+        for (event in events) {
+            if (event.type != DataEvent.TYPE_CHANGED) continue
+            if (event.dataItem.uri.path != DeviceSync.DEVICES_PATH) continue
+            try {
+                val dm = DataMapItem.fromDataItem(event.dataItem).dataMap
+                val devicesJson = dm.getString(DeviceSync.KEY_DEVICES_JSON, "")
+                if (!devicesJson.isNullOrEmpty()) {
+                    applySyncedDevicesJson(devicesJson, "data-foreground")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "foreground devices onDataChanged failed", e)
+            }
+        }
+    }
+
+    private fun onMessageWhileForeground(event: MessageEvent) {
+        Log.d(TAG, "foreground onMessageReceived path=${event.path}")
+        if (event.path != DeviceSync.DEVICES_PATH) return
+        val devicesJson = String(event.data, Charsets.UTF_8)
+        if (devicesJson.isNotEmpty()) {
+            applySyncedDevicesJson(devicesJson, "message-foreground")
+        }
+    }
+
+    /**
+     * Merges a watch-pushed device list into the current list and cache.
+     * Remote entries win on id conflict; local-only entries are kept.
+     */
+    private fun applySyncedDevicesJson(devicesJson: String, source: String) {
+        if (devicesJson == lastAppliedDevicesJson) {
+            Log.d(TAG, "applySyncedDevices via $source: already applied; skipping")
+            return
+        }
+        val remote = try {
+            DeviceSync.devicesFromJson(devicesJson)
+        } catch (e: Exception) {
+            Log.e(TAG, "applySyncedDevices via $source: decode failed", e)
+            return
+        }
+        if (remote.isEmpty()) {
+            Log.d(TAG, "applySyncedDevices via $source: empty list; ignoring")
+            return
+        }
+        Log.d(TAG, "applySyncedDevices via $source: merging ${remote.size} remote device(s)")
+        applyingRemoteDevices = true
+        try {
+            lastAppliedDevicesJson = devicesJson
+            // don't echo back what we just received
+            lastPushedDevicesJson = devicesJson
+            val merged = mutableListOf<Device>()
+            val seen = mutableSetOf<String>()
+            remote.forEach { merged.add(it); seen.add(it.id) }
+            devices.filter { !seen.contains(it.id) }.forEach { merged.add(it); seen.add(it.id) }
+            devices.clear()
+            devices.addAll(merged.sortedBy { it.alias })
+            persistDevices()
+            // every known IP stays findable by future scans
+            val ips = HashSet(loadManualIps())
+            var changed = false
+            devices.forEach { if (ips.add(it.ipAddress)) changed = true }
+            if (changed) {
+                getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                    .edit().putStringSet(KEY_MANUAL_IPS, ips).apply()
+            }
+            adapter.notifyDataSetChanged()
+            emptyView.visibility = if (devices.isEmpty()) View.VISIBLE else View.GONE
+        } finally {
+            applyingRemoteDevices = false
+        }
+    }
+
+    /**
+     * Pulls an already-synced device list from the Data Layer. Handles the
+     * case where the watch pushed while the phone app was closed.
+     */
+    private fun pullDevicesFromDataLayer() {
+        scope.launch {
+            try {
+                val devicesJson = withContext(Dispatchers.IO) {
+                    val client = Wearable.getDataClient(this@MainActivity)
+                    val uri = Uri.parse("wear://*" + DeviceSync.DEVICES_PATH)
+                    val buffer = Tasks.await(client.getDataItems(uri))
+                    try {
+                        var found: String? = null
+                        for (item in buffer) {
+                            if (item.uri.path == DeviceSync.DEVICES_PATH) {
+                                val dm = DataMapItem.fromDataItem(item).dataMap
+                                val raw = dm.getString(DeviceSync.KEY_DEVICES_JSON, "")
+                                if (!raw.isNullOrEmpty()) {
+                                    found = raw
+                                    break
+                                }
+                            }
+                        }
+                        found
+                    } finally {
+                        buffer.close()
+                    }
+                }
+                if (devicesJson != null) {
+                    applySyncedDevicesJson(devicesJson, "data-pull")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to pull devices from Data Layer", e)
+            }
+        }
+    }
+
+    /**
+     * Pushes the current list to the watch. No-op while applying a remote
+     * list (echo guard), when empty (never wipe the peer's list from an
+     * empty state), or when unchanged.
+     */
+    private fun pushDevicesToWear() {
+        if (applyingRemoteDevices) return
+        if (devices.isEmpty()) return
+        val devicesJson = try {
+            DeviceSync.devicesToJson(devices)
+        } catch (e: Exception) {
+            Log.e(TAG, "pushDevicesToWear: encode failed", e)
+            return
+        }
+        if (devicesJson == lastPushedDevicesJson) return
+        lastPushedDevicesJson = devicesJson
+        lastAppliedDevicesJson = devicesJson
+        Log.d(TAG, "Pushing ${devices.size} device(s) to wear")
+        SyncHelper.sendDevicesToWear(this, devicesJson)
+    }
+
+    private fun loadCachedDevices(): List<Device> {
+        return try {
+            val raw = getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                .getString(KEY_CACHED_DEVICES, "") ?: ""
+            DeviceSync.devicesFromJson(raw)
+        } catch (e: Exception) {
+            Log.w(TAG, "loadCachedDevices failed: ${e.message}")
+            emptyList()
+        }
+    }
+
+    private fun persistDevices() {
+        try {
+            getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+                .putString(KEY_CACHED_DEVICES, DeviceSync.devicesToJson(devices))
+                .apply()
+        } catch (e: Exception) {
+            Log.w(TAG, "persistDevices failed: ${e.message}")
+        }
+    }
+
+    /** Returns (ip, netmask) of the wifi network, or null when unavailable. */    private fun localNetwork(): Pair<String, String>? {
         val cm = getSystemService(CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
         // Prefer the network that actually carries internet over WIFI transport;
         // allNetworks order is arbitrary and the first IPv4 may belong to a VPN
@@ -235,6 +450,7 @@ class MainActivity : AppCompatActivity() {
         const val KEY_USER = "username"
         const val KEY_PASS = "password"
         const val KEY_MANUAL_IPS = "manual_ips"
+        const val KEY_CACHED_DEVICES = "cached_devices"
         const val REQUEST_ADD_DEVICE = 2
     }
 }

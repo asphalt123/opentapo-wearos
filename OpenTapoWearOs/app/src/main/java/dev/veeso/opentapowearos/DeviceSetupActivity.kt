@@ -72,12 +72,12 @@ class DeviceSetupActivity : Activity() {
 
         GlobalScope.launch {
             withContext(Dispatchers.IO) {
-                if (address.isReachable(3000)) {
-                    doDeviceHandshake(address)
-                } else {
-                    setError(R.string.device_setup_activity_error_unreachable)
-                    setActivityState(ActivityState.FORM)
-                }
+                // NOTE: no InetAddress.isReachable() check here on purpose.
+                // ICMP ping is unreliable on Android (usually blocked, requires
+                // root on some builds) and Tapo devices often don't answer it,
+                // so a reachable device would be reported unreachable.
+                // The TCP/KLAP handshake below is the real reachability probe.
+                doDeviceHandshake(address)
             }
         }
     }

@@ -13,6 +13,8 @@ class DataLayerListenerService : WearableListenerService() {
     companion object {
         private const val TAG = "DataLayerListenerService"
         private const val CREDENTIALS_PATH = "/opentapo/credentials"
+        const val ACTION_DEVICES_UPDATED = "dev.veeso.opentapowearos.DEVICES_UPDATED"
+        const val EXTRA_DEVICES_JSON = "devices_json"
     }
 
     override fun onCreate() {
@@ -52,6 +54,16 @@ class DataLayerListenerService : WearableListenerService() {
                     } catch (e: Exception) {
                         Log.e(TAG, "Error processing credentials data item", e)
                     }
+                } else if (event.dataItem.uri.path == DeviceSync.DEVICES_PATH) {
+                    try {
+                        val dm = DataMapItem.fromDataItem(event.dataItem).dataMap
+                        val devicesJson = dm.getString(DeviceSync.KEY_DEVICES_JSON, "")
+                        if (!devicesJson.isNullOrEmpty()) {
+                            onDevicesSynced(devicesJson, "data-background")
+                        }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error processing devices data item", e)
+                    }
                 }
             }
         }
@@ -77,6 +89,38 @@ class DataLayerListenerService : WearableListenerService() {
             } catch (e: Exception) {
                 Log.e(TAG, "Error processing credentials message", e)
             }
+        } else if (messageEvent.path == DeviceSync.DEVICES_PATH) {
+            try {
+                val devicesJson = String(messageEvent.data, Charsets.UTF_8)
+                if (devicesJson.isNotEmpty()) {
+                    onDevicesSynced(devicesJson, "message-background")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error processing devices message", e)
+            }
+        }
+    }
+
+    /**
+     * Persists a phone-pushed device list to the local cache so it survives
+     * restarts, then notifies the foreground MainActivity (if any) to merge
+     * it into its in-memory list. MainActivity deduplicates re-deliveries via
+     * its last-applied guard, so background + foreground handling is safe.
+     */
+    private fun onDevicesSynced(devicesJson: String, source: String) {
+        Log.d(TAG, "onDevicesSynced via $source len=${devicesJson.length}")
+        try {
+            val devices = DeviceSync.devicesFromJson(devicesJson)
+            Log.d(TAG, "onDevicesSynced: decoded ${devices.size} device(s)")
+            getSharedPreferences(MainActivity.SHARED_PREFS, MODE_PRIVATE).edit()
+                .putString(
+                    MainActivity.SHARED_PREFS_CACHED_DEVICES,
+                    dev.veeso.opentapowearos.view.app_data.DeviceCache(devices).serialize()
+                )
+                .apply()
+            sendBroadcast(Intent(ACTION_DEVICES_UPDATED).putExtra(EXTRA_DEVICES_JSON, devicesJson))
+        } catch (e: Exception) {
+            Log.e(TAG, "onDevicesSynced failed", e)
         }
     }
 }
