@@ -62,6 +62,61 @@ object SyncHelper {
     }
 
     /**
+     * Pushes the ACTIVE Tapo account to the watch on its own Data Layer path
+     * (`/opentapo/account`, tagged with the account id) so the watch can
+     * keep per-account state instead of mixing maison/travail devices.
+     * The legacy `/opentapo/credentials` push is kept alongside for the
+     * current watch app, which only knows that path.
+     */
+    fun sendActiveAccountToWear(context: Context) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val account = dev.veeso.opentapo.mobile.account.AccountStore.active(context)
+                    ?: return@launch
+                val creds = dev.veeso.opentapo.mobile.account.AccountStore.activeCredentials(context)
+                    ?: return@launch
+                Log.d(TAG, "sendActiveAccountToWear: account=${account.label} id=${account.id}")
+                val req = PutDataMapRequest.create(
+                    dev.veeso.opentapo.mobile.account.AccountStore.ACCOUNT_PATH
+                )
+                req.dataMap.putString(
+                    dev.veeso.opentapo.mobile.account.AccountStore.KEY_ACCOUNT_ID, account.id
+                )
+                req.dataMap.putString("label", account.label)
+                req.dataMap.putString("username", creds.username)
+                req.dataMap.putString("password", creds.password)
+                req.dataMap.putLong("timestamp", System.currentTimeMillis())
+                val result = Tasks.await(
+                    Wearable.getDataClient(context).putDataItem(req.asPutDataRequest().setUrgent())
+                )
+                Log.d(TAG, "sendActiveAccountToWear OK uri=${result?.uri}")
+                try {
+                    val nodes = Tasks.await(Wearable.getNodeClient(context).connectedNodes)
+                    val payload = "${account.id}\n${creds.username}\n${creds.password}"
+                        .toByteArray(Charsets.UTF_8)
+                    for (node in nodes) {
+                        try {
+                            Tasks.await(
+                                Wearable.getMessageClient(context).sendMessage(
+                                    node.id,
+                                    dev.veeso.opentapo.mobile.account.AccountStore.ACCOUNT_PATH,
+                                    payload
+                                )
+                            )
+                        } catch (e: Exception) {
+                            Log.e(TAG, "account message to ${node.id} FAILED: ${e.message}", e)
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "account list nodes FAILED: ${e.message}", e)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "sendActiveAccountToWear FAILED: ${e.message}", e)
+            }
+        }
+    }
+
+    /**
      * Pushes the phone device list to the watch, both as a persistent DataItem
      * (so the watch can pull it later, even if it was offline) and as an
      * immediate message to connected nodes. [devicesJson] is produced by

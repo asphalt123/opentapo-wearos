@@ -169,4 +169,16 @@
     <string name="geofence_enter_title">Bienvenue : %1$s</string>
     <string name="geofence_exit_title">Départ : %1$s</string>
     <string name="geofence_applied">%1$s : %2$d/%3$d prise(s) %4$s</string>
+    <!-- Multi-compte -->
+    <string name="menu_accounts">Comptes</string>
+    <string name="account_hint">Bascule entre tes comptes Tapo (maison, travail…). Le compte actif pilote l\'app et la montre ; chaque compte garde son propre réseau d\'appareils.</string>
+    <string name="account_none">Aucun compte — connecte-toi d\'abord.</string>
+    <string name="account_add_title">Ajouter un compte</string>
+    <string name="account_label_hint">Nom (ex : Travail)</string>
+    <string name="account_need_all">Remplis le nom, l\'e-mail et le mot de passe</string>
+    <string name="account_added">Compte %1$s ajouté</string>
+    <string name="account_switched">Compte actif : %1$s — rescan en cours…</string>
+    <string name="account_deleted">Compte %1$s supprimé</string>
+    <string name="account_delete_title">Supprimer %1$s ?</string>
+    <string name="account_delete_hint">Les appareils de ce compte seront oubliés sur ce téléphone.</string>
 </resources>

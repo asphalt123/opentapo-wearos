@@ -37,6 +37,10 @@
         android:title="@string/menu_geofence"
         app:showAsAction="never" />
     <item
+        android:id="@+id/action_accounts"
+        android:title="@string/menu_accounts"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/action_logout"
         android:title="@string/logout"
         app:showAsAction="never" />

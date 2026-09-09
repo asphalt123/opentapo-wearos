@@ -53,6 +53,10 @@
             android:exported="false"
             android:theme="@style/Theme.OpenTapoMobile" />
         <activity
+            android:name=".account.AccountActivity"
+            android:exported="false"
+            android:theme="@style/Theme.OpenTapoMobile" />
+        <activity
             android:name=".geofence.GeofenceActivity"
             android:exported="false"
             android:theme="@style/Theme.OpenTapoMobile" />

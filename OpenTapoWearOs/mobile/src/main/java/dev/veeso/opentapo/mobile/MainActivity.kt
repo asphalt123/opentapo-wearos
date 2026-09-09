@@ -119,6 +119,10 @@ class MainActivity : AppCompatActivity() {
                     startActivity(Intent(this, dev.veeso.opentapo.mobile.geofence.GeofenceActivity::class.java))
                     true
                 }
+                R.id.action_accounts -> {
+                    startActivity(Intent(this, dev.veeso.opentapo.mobile.account.AccountActivity::class.java))
+                    true
+                }
                 else -> false
             }
         }
