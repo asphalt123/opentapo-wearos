@@ -11,7 +11,12 @@ android {
     compileSdk 33
 
     defaultConfig {
-        applicationId "dev.veeso.opentapo.mobile"
+        // NOTE: must match the watch app (dev.veeso.opentapowearos). The Wear Data
+        // Layer (DataClient/MessageClient) only routes between apps with the same
+        // package name AND signature — with a different ID here GMS silently drops
+        // everything and the watch WearableListenerService is never even created.
+        // namespace above stays dev.veeso.opentapo.mobile (code/R only).
+        applicationId "dev.veeso.opentapowearos"
         minSdk 26
         targetSdk 33
         versionCode 1

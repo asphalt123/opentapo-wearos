@@ -19,7 +19,12 @@ import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.gms.tasks.Tasks
+import com.google.android.gms.wearable.DataClient
+import com.google.android.gms.wearable.DataEvent
+import com.google.android.gms.wearable.DataEventBuffer
 import com.google.android.gms.wearable.DataMapItem
+import com.google.android.gms.wearable.MessageClient
+import com.google.android.gms.wearable.MessageEvent
 import com.google.android.gms.wearable.Wearable
 import dev.veeso.opentapowearos.databinding.ActivityMainBinding
 import dev.veeso.opentapowearos.net.DeviceScanner
@@ -65,6 +70,15 @@ class MainActivity : Activity() {
     // network
     private var deviceNetwork: Pair<String, String>? = null
 
+    // Foreground Data Layer listeners (belt & braces alongside
+    // DataLayerListenerService, which handles the background case).
+    private val dataListener = DataClient.OnDataChangedListener { events ->
+        onDataChangedWhileForeground(events)
+    }
+    private val messageListener = MessageClient.OnMessageReceivedListener { event ->
+        onMessageWhileForeground(event)
+    }
+
     // states
     private var state: ActivityState = ActivityState.LOADING_DEVICE_LIST
     private var selectedDevices: MutableList<String> = mutableListOf()
@@ -90,6 +104,8 @@ class MainActivity : Activity() {
     override fun onResume() {
         super.onResume()
         Log.d(TAG, "onResume")
+        Wearable.getDataClient(this).addListener(dataListener)
+        Wearable.getMessageClient(this).addListener(messageListener)
 
         setActivityState(ActivityState.NO_DEVICE_FOUND)
 
@@ -129,6 +145,18 @@ class MainActivity : Activity() {
             if (this.selectedGroups.isNotEmpty()) {
                 onDeleteGroupsClick()
             }
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        try {
+            Wearable.getDataClient(this).removeListener(dataListener)
+        } catch (_: Exception) {
+        }
+        try {
+            Wearable.getMessageClient(this).removeListener(messageListener)
+        } catch (_: Exception) {
         }
     }
 
@@ -281,6 +309,48 @@ class MainActivity : Activity() {
             )
             pullCredentialsFromDataLayer()
         }
+    }
+
+    /**
+     * Foreground DataClient listener: fires while MainActivity is resumed, even
+     * if the background WearableListenerService hasn't been bound yet by GMS.
+     */
+    private fun onDataChangedWhileForeground(events: DataEventBuffer) {
+        Log.d(TAG, "foreground onDataChanged events=${events.count}")
+        for (event in events) {
+            if (event.type != DataEvent.TYPE_CHANGED) continue
+            if (event.dataItem.uri.path != "/opentapo/credentials") continue
+            try {
+                val dm = DataMapItem.fromDataItem(event.dataItem).dataMap
+                val username = dm.getString("username", "")
+                val password = dm.getString("password", "")
+                if (username.isNotEmpty() && password.isNotEmpty()) {
+                    applySyncedCredentials(username, password, "data-foreground")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "foreground onDataChanged failed: $e")
+            }
+        }
+    }
+
+    /** Foreground MessageClient listener: same path, direct push fallback. */
+    private fun onMessageWhileForeground(event: MessageEvent) {
+        Log.d(TAG, "foreground onMessageReceived path=${event.path}")
+        if (event.path != "/opentapo/credentials") return
+        val parts = String(event.data, Charsets.UTF_8).split("\n")
+        if (parts.size >= 2 && parts[0].isNotEmpty() && parts[1].isNotEmpty()) {
+            applySyncedCredentials(parts[0], parts[1], "message-foreground")
+        }
+    }
+
+    private fun applySyncedCredentials(username: String, password: String, source: String) {
+        Log.d(TAG, "applySyncedCredentials via $source user=$username")
+        credentials = Credentials(username, password)
+        getSharedPreferences(SHARED_PREFS, Context.MODE_PRIVATE).edit()
+            .putString(SHARED_PREFS_USERNAME, username)
+            .putString(SHARED_PREFS_PASSWORD, password)
+            .apply()
+        runOnUiThread { onCredentials() }
     }
 
     /**
