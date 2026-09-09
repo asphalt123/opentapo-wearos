@@ -12,6 +12,11 @@
         android:icon="@android:drawable/ic_input_add"
         app:showAsAction="ifRoom" />
     <item
+        android:id="@+id/action_tile"
+        android:title="@string/menu_tile"
+        android:icon="@drawable/ic_tile"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/action_logout"
         android:title="@string/logout"
         app:showAsAction="never" />

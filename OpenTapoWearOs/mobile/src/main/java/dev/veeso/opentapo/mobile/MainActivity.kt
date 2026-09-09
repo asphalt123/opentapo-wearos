@@ -90,6 +90,10 @@ class MainActivity : AppCompatActivity() {
                     openAddDevice()
                     true
                 }
+                R.id.action_tile -> {
+                    startActivity(Intent(this, dev.veeso.opentapo.mobile.tile.TileSettingsActivity::class.java))
+                    true
+                }
                 else -> false
             }
         }
@@ -271,6 +275,7 @@ class MainActivity : AppCompatActivity() {
                 persistDevices()
                 pushDevicesToWear()
                 DeviceWidgetHelper.updateAll(this@MainActivity)
+                dev.veeso.opentapo.mobile.tile.TileHelper.requestRefresh(this@MainActivity)
                 adapter.notifyDataSetChanged()
                 emptyView.visibility = if (devices.isEmpty()) View.VISIBLE else View.GONE
                 if (devices.isEmpty()) {
@@ -483,6 +488,7 @@ class MainActivity : AppCompatActivity() {
                 device.status = device.status.copy(deviceOn = newState)
                 persistDevices()
                 DeviceWidgetHelper.updateAll(this@MainActivity)
+                dev.veeso.opentapo.mobile.tile.TileHelper.requestRefresh(this@MainActivity)
                 showMessage(
                     "${device.alias} : " + getString(if (newState) R.string.state_on else R.string.state_off)
                 )

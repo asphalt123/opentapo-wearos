@@ -30,6 +30,31 @@
             android:name=".widget.WidgetConfigActivity"
             android:exported="false"
             android:theme="@style/Theme.OpenTapoMobile" />
+        <activity
+            android:name=".common.DevicePickerActivity"
+            android:exported="false"
+            android:theme="@style/Theme.OpenTapoMobile" />
+        <activity
+            android:name=".tile.TileSettingsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.OpenTapoMobile" />
+
+        <service
+            android:name=".tile.FavoriteTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_tile"
+            android:label="@string/tile_label"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.service.quicksettings.TOGGLEABLE_TILE"
+                android:value="true" />
+            <meta-data
+                android:name="android.service.quicksettings.ACTION_QS_TILE_PREFERENCES"
+                android:value="dev.veeso.opentapo.mobile.tile.TileSettingsActivity" />
+        </service>
 
         <receiver
             android:name=".widget.DeviceWidgetProvider"

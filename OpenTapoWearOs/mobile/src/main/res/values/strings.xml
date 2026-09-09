@@ -36,4 +36,16 @@
     <string name="widget_configure">Choisir la prise</string>
     <string name="widget_config_title">Choisir la prise du widget</string>
     <string name="widget_config_empty">Aucun appareil : ouvre l\'app et lance un scan d\'abord.</string>
+    <!-- Sélecteur générique -->
+    <string name="picker_title_default">Choisir un appareil</string>
+    <string name="picker_none">Aucun</string>
+    <!-- Quick Settings Tile -->
+    <string name="tile_label">OpenTapo</string>
+    <string name="tile_no_favorite">Aucune prise favorite — touche pour choisir</string>
+    <string name="tile_pick_title">Choisir la prise favorite</string>
+    <string name="tile_settings_title">Tuile accès rapide</string>
+    <string name="tile_settings_hint">Cette prise sera pilotée depuis le panneau de notifications (tuile OpenTapo). Ajoute la tuile via le crayon du panneau rapide.</string>
+    <string name="tile_current">Favorite : %1$s (%2$s)</string>
+    <string name="tile_clear">Retirer la favorite</string>
+    <string name="menu_tile">Tuile rapide</string>
 </resources>
