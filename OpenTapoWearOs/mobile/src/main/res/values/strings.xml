@@ -97,4 +97,11 @@
     <string name="control_color_value">Couleur : teinte %1$d, saturation %2$d</string>
     <string name="control_temp_value">Blanc : %1$d K</string>
     <string name="menu_energy">Consommation</string>
+    <!-- Énergie -->
+    <string name="energy_subtitle">Moniteur P110 — relevé toutes les 10 s</string>
+    <string name="energy_power">%.1f W</string>
+    <string name="energy_today">Aujourd\'hui : %.3f kWh</string>
+    <string name="energy_month">Mois : %.2f kWh</string>
+    <string name="energy_unavailable">Compteur indisponible</string>
+    <string name="energy_no_data">Pas encore de mesures</string>
 </resources>

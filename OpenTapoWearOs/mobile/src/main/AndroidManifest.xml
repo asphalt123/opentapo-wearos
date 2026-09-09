@@ -49,6 +49,15 @@
             android:name=".control.DeviceControlActivity"
             android:exported="false"
             android:theme="@style/Theme.OpenTapoMobile" />
+        <activity
+            android:name=".energy.EnergyActivity"
+            android:exported="true"
+            android:theme="@style/Theme.OpenTapoMobile">
+            <intent-filter>
+                <action android:name="dev.veeso.opentapo.mobile.energy.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
 
         <receiver android:name=".timer.TimerReceiver" android:exported="false" />
         <receiver android:name=".timer.TimerBootReceiver" android:exported="false">

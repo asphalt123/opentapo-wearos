@@ -11,6 +11,7 @@ import dev.veeso.opentapo.mobile.tapo.api.tapo.response.TapoResponse
 import dev.veeso.opentapo.mobile.tapo.api.tapo.response.result.HandshakeResult
 import dev.veeso.opentapo.mobile.tapo.api.tapo.response.result.LoginResult
 import dev.veeso.opentapo.mobile.tapo.api.tapo.response.result.PassthroughResult
+import dev.veeso.opentapo.mobile.tapo.api.tapo.response.result.EnergyUsageResult
 import dev.veeso.opentapo.mobile.tapo.api.tapo.response.result.SetDeviceInfoResult
 import dev.veeso.opentapo.mobile.tapo.api.tapo.response.result.get_device_info.GenericDeviceInfoResult
 import dev.veeso.opentapo.mobile.tapo.device.Device
@@ -123,6 +124,14 @@ class TapoClient {
     suspend fun getDeviceInfo(): GenericDeviceInfoResult {
         val request = packRequest(GetDeviceInfoParams())
         val response: TapoResponse<GenericDeviceInfoResult> = executeRequest(request)
+        validateResponse(response)
+        return response.result!!
+    }
+
+    /** Live + cumulative energy counters (P110; null fields when unsupported). */
+    suspend fun getEnergyUsage(): EnergyUsageResult {
+        val request = packRequest(GetEnergyUsageParams())
+        val response: TapoResponse<EnergyUsageResult> = executeRequest(request)
         validateResponse(response)
         return response.result!!
     }
@@ -261,6 +270,7 @@ class TapoClient {
 
         val method = when (params!!::class.java) {
             GetDeviceInfoParams::class.java -> METHOD_GET_DEVICE_INFO
+            GetEnergyUsageParams::class.java -> METHOD_GET_ENERGY_USAGE
             HandshakeParams::class.java -> METHOD_HANDSHAKE
             LoginParams::class.java -> METHOD_LOGIN
             PassthroughParams::class.java -> METHOD_SECURE_PASSTHROUGH

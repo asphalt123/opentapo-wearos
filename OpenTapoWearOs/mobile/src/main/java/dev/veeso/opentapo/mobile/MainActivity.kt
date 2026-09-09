@@ -98,6 +98,15 @@ class MainActivity : AppCompatActivity() {
                     startActivity(Intent(this, dev.veeso.opentapo.mobile.timer.TimerActivity::class.java))
                     true
                 }
+                R.id.action_energy -> {
+                    val pick = Intent(this, dev.veeso.opentapo.mobile.common.DevicePickerActivity::class.java)
+                    pick.putExtra(
+                        dev.veeso.opentapo.mobile.common.DevicePickerActivity.EXTRA_TITLE_RES,
+                        R.string.menu_energy
+                    )
+                    startActivityForResult(pick, REQUEST_ENERGY_PICK)
+                    true
+                }
                 else -> false
             }
         }
@@ -168,6 +177,14 @@ class MainActivity : AppCompatActivity() {
             if (ip != null) {
                 saveManualIp(ip)
                 discover()
+            }
+        }
+        if (requestCode == REQUEST_ENERGY_PICK && resultCode == RESULT_OK) {
+            val id = data?.getStringExtra(dev.veeso.opentapo.mobile.common.DevicePickerActivity.EXTRA_DEVICE_ID)
+            if (!id.isNullOrEmpty()) {
+                val energy = Intent(dev.veeso.opentapo.mobile.energy.EnergyActivity.ACTION_VIEW)
+                energy.putExtra(dev.veeso.opentapo.mobile.energy.EnergyActivity.EXTRA_DEVICE_ID, id)
+                startActivity(energy)
             }
         }
     }
@@ -523,5 +540,6 @@ class MainActivity : AppCompatActivity() {
         const val KEY_MANUAL_IPS = "manual_ips"
         const val KEY_CACHED_DEVICES = "cached_devices"
         const val REQUEST_ADD_DEVICE = 2
+        const val REQUEST_ENERGY_PICK = 3
     }
 }
