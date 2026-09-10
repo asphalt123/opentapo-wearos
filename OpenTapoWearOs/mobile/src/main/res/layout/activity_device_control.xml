@@ -97,7 +97,7 @@
                 android:textColor="@color/op_text_primary"
                 android:textSize="16sp" />
 
-            <dev.veeso.opentapo.mobile.control.ColorWheelView
+            <com.hn.otapo.control.ColorWheelView
                 android:id="@+id/control_wheel"
                 android:layout_width="220dp"
                 android:layout_height="220dp"

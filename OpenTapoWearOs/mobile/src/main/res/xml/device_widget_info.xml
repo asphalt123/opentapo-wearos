@@ -8,4 +8,4 @@
     android:initialLayout="@layout/widget_device"
     android:description="@string/widget_desc"
     android:widgetCategory="home_screen"
-    android:configure="dev.veeso.opentapo.mobile.widget.WidgetConfigActivity" />
+    android:configure="com.hn.otapo.widget.WidgetConfigActivity" />

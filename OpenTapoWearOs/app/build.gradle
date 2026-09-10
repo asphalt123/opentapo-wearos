@@ -8,11 +8,11 @@ apply plugin: 'kotlinx-serialization'
 
 
 android {
-    namespace 'dev.veeso.opentapowearos'
+    namespace 'com.hn.otapo'
     compileSdk 33
 
     defaultConfig {
-        applicationId "dev.veeso.opentapowearos"
+        applicationId "com.hn.otapo"
         minSdk 30
         targetSdk 33
         // version code "xxxx" (major, minor, patch, build). e.g. 0.2.1 1st build is (0)210

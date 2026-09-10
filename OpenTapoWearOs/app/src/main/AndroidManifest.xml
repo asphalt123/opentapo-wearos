@@ -50,7 +50,7 @@
             android:name=".complication.ComplicationConfigActivity"
             android:exported="true">
             <intent-filter>
-                <action android:name="dev.veeso.opentapowearos.complication.CONFIG" />
+                <action android:name="com.hn.otapo.complication.CONFIG" />
                 <category android:name="android.support.wearable.complications.category.PROVIDER_CONFIG" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
@@ -74,7 +74,7 @@
                 android:value="300" />
             <meta-data
                 android:name="android.support.wearable.complications.PROVIDER_CONFIG_ACTION"
-                android:value="dev.veeso.opentapowearos.complication.CONFIG" />
+                android:value="com.hn.otapo.complication.CONFIG" />
         </service>
         <service
             android:name=".DataLayerListenerService"

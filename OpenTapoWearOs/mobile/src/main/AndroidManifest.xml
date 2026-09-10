@@ -87,7 +87,7 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https" android:host="opentapo.veeso.dev" android:pathPrefix="/toggle" />
+                <data android:scheme="https" android:host="otapo.hn" android:pathPrefix="/toggle" />
             </intent-filter>
         </activity>
         <activity
@@ -115,14 +115,14 @@
             android:exported="true"
             android:theme="@style/Theme.OpenTapoMobile">
             <intent-filter>
-                <action android:name="dev.veeso.opentapo.mobile.energy.VIEW" />
+                <action android:name="com.hn.otapo.energy.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
 
         <receiver android:name=".geofence.GeofenceReceiver" android:exported="false">
             <intent-filter>
-                <action android:name="dev.veeso.opentapo.mobile.geofence.TRANSITION" />
+                <action android:name="com.hn.otapo.geofence.TRANSITION" />
             </intent-filter>
         </receiver>
         <receiver android:name=".geofence.GeofenceBootReceiver" android:exported="false">
@@ -134,7 +134,7 @@
         </receiver>
         <receiver android:name=".monitor.DeviceMonitorReceiver" android:exported="false">
             <intent-filter>
-                <action android:name="dev.veeso.opentapo.mobile.monitor.CHECK" />
+                <action android:name="com.hn.otapo.monitor.CHECK" />
             </intent-filter>
         </receiver>
         <receiver android:name=".monitor.MonitorBootReceiver" android:exported="false">
@@ -167,7 +167,7 @@
                 android:value="true" />
             <meta-data
                 android:name="android.service.quicksettings.ACTION_QS_TILE_PREFERENCES"
-                android:value="dev.veeso.opentapo.mobile.tile.TileSettingsActivity" />
+                android:value="com.hn.otapo.tile.TileSettingsActivity" />
         </service>
 
         <receiver
@@ -176,7 +176,7 @@
             android:label="@string/widget_label">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="dev.veeso.opentapo.mobile.widget.TOGGLE" />
+                <action android:name="com.hn.otapo.widget.TOGGLE" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"

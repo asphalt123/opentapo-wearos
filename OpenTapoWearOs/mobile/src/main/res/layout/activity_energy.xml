@@ -82,7 +82,7 @@
             android:textSize="13sp"
             android:visibility="gone" />
 
-        <dev.veeso.opentapo.mobile.energy.EnergyChartView
+        <com.hn.otapo.energy.EnergyChartView
             android:id="@+id/energy_chart"
             android:layout_width="match_parent"
             android:layout_height="160dp"

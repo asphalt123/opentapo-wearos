@@ -4,8 +4,8 @@
     <capability android:name="actions.intent.OPEN_APP_FEATURE">
         <intent
             android:action="android.intent.action.VIEW"
-            android:targetClass="dev.veeso.opentapo.mobile.voice.VoiceActionActivity"
-            android:targetPackage="dev.veeso.opentapowearos">
+            android:targetClass="com.hn.otapo.voice.VoiceActionActivity"
+            android:targetPackage="com.hn.otapo">
             <url-parameter
                 android:name="feature"
                 android:key="feature" />
@@ -22,9 +22,9 @@
         android:shortcutLongLabel="@string/voice_all_on"
         android:shortcutShortLabel="@string/voice_all_on">
         <intent
-            android:action="dev.veeso.opentapo.mobile.voice.ALL_ON"
-            android:targetClass="dev.veeso.opentapo.mobile.voice.VoiceActionActivity"
-            android:targetPackage="dev.veeso.opentapowearos" />
+            android:action="com.hn.otapo.voice.ALL_ON"
+            android:targetClass="com.hn.otapo.voice.VoiceActionActivity"
+            android:targetPackage="com.hn.otapo" />
         <categories android:name="android.shortcut.conversation" />
     </shortcut>
 
@@ -35,9 +35,9 @@
         android:shortcutLongLabel="@string/voice_all_off"
         android:shortcutShortLabel="@string/voice_all_off">
         <intent
-            android:action="dev.veeso.opentapo.mobile.voice.ALL_OFF"
-            android:targetClass="dev.veeso.opentapo.mobile.voice.VoiceActionActivity"
-            android:targetPackage="dev.veeso.opentapowearos" />
+            android:action="com.hn.otapo.voice.ALL_OFF"
+            android:targetClass="com.hn.otapo.voice.VoiceActionActivity"
+            android:targetPackage="com.hn.otapo" />
         <categories android:name="android.shortcut.conversation" />
     </shortcut>
 
