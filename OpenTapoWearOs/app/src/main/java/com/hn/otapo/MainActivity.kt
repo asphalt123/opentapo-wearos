@@ -1220,7 +1220,7 @@ class MainActivity : Activity() {
     companion object {
         const val TAG = "MainActivity"
         const val DEVICE_STATE_REFRESH_MS = 15000L
-        const val SHARED_PREFS = "OpenTapoWearOs"
+        const val SHARED_PREFS = "Otapo"
         const val SHARED_PREFS_USERNAME = "username"
         const val SHARED_PREFS_PASSWORD = "password"
         const val SHARED_PREFS_CACHED_DEVICES = "cachedDeviceList"

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">OpenTapo</string>
+    <string name="app_name">Otapo</string>
     <string name="login_title">Connexion Tapo</string>
     <string name="login_subtitle">Contrôle tes prises en local, sans cloud</string>
     <string name="login_hint">Tes identifiants servent uniquement à la connexion locale (KLAP) et sont synchronisés avec ta montre.</string>

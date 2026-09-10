@@ -39,7 +39,7 @@ class DataLayerListenerService : WearableListenerService() {
                         val password = dm.getString("password", "")
                         val timestamp = dm.getLong("timestamp", 0L)
 
-                        getSharedPreferences("OpenTapoWearOs", MODE_PRIVATE).edit()
+                        getSharedPreferences("Otapo", MODE_PRIVATE).edit()
                             .putString("username", username)
                             .putString("password", password)
                             .apply()
@@ -78,7 +78,7 @@ class DataLayerListenerService : WearableListenerService() {
                 if (parts.size >= 2) {
                     val username = parts[0]
                     val password = parts[1]
-                    getSharedPreferences("OpenTapoWearOs", MODE_PRIVATE).edit()
+                    getSharedPreferences("Otapo", MODE_PRIVATE).edit()
                         .putString("username", username)
                         .putString("password", password)
                         .apply()

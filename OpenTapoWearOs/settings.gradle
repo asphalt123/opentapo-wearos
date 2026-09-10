@@ -12,6 +12,6 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "OpenTapoWearOs"
+rootProject.name = "Otapo"
 include ':app'
 include ':mobile'
