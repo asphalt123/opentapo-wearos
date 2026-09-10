@@ -2,7 +2,9 @@ package dev.veeso.opentapowearos
 
 import android.app.Activity
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
+import android.os.Parcelable
 import android.util.Log
 import android.view.View
 import android.view.inputmethod.EditorInfo
@@ -25,7 +27,7 @@ class NewGroupActivity : Activity() {
     override fun onResume() {
         super.onResume()
 
-        val groups = intent.getParcelableExtra<NewGroupInput>(INTENT_INPUT)
+        val groups = parcelableExtraCompat(INTENT_INPUT, NewGroupInput::class.java)
         if (groups != null) {
             Log.d(TAG, String.format("Found device for groups %s", groups.idList))
             this.deviceIds = groups.idList
@@ -87,5 +89,15 @@ class NewGroupActivity : Activity() {
         const val INTENT_INPUT = "NewGroupInput"
         const val INTENT_OUTPUT = "NewGroupOutput"
         const val TAG = "NewGroupActivity"
+    }
+
+    @Suppress("DEPRECATION")
+    private fun <T : Parcelable> parcelableExtraCompat(key: String, clazz: Class<T>): T? {
+        intent.setExtrasClassLoader(clazz.classLoader)
+        return if (Build.VERSION.SDK_INT >= 33) {
+            intent.getParcelableExtra(key, clazz)
+        } else {
+            intent.getParcelableExtra(key)
+        }
     }
 }

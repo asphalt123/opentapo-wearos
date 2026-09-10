@@ -13,25 +13,37 @@ data class DeviceStatus(
 ) : Parcelable {
 
     constructor(parcel: Parcel) : this(
-        deviceOn = parcel.readBoolean(),
-        brightness = parcel.readInt(),
-        hue = parcel.readInt(),
-        saturation = parcel.readInt(),
-        colorTemperature = parcel.readInt()
+        deviceOn = parcel.readByte() != 0.toByte(),
+        brightness = parcel.readByte().let { if (it == 0.toByte()) null else parcel.readInt() },
+        hue = parcel.readByte().let { if (it == 0.toByte()) null else parcel.readInt() },
+        saturation = parcel.readByte().let { if (it == 0.toByte()) null else parcel.readInt() },
+        colorTemperature = parcel.readByte().let { if (it == 0.toByte()) null else parcel.readInt() }
     )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
-        parcel.writeBoolean(deviceOn)
-        if (brightness != null) {
+        parcel.writeByte(if (deviceOn) 1 else 0)
+        if (brightness == null) {
+            parcel.writeByte(0)
+        } else {
+            parcel.writeByte(1)
             parcel.writeInt(brightness)
         }
-        if (hue != null) {
+        if (hue == null) {
+            parcel.writeByte(0)
+        } else {
+            parcel.writeByte(1)
             parcel.writeInt(hue)
         }
-        if (saturation != null) {
+        if (saturation == null) {
+            parcel.writeByte(0)
+        } else {
+            parcel.writeByte(1)
             parcel.writeInt(saturation)
         }
-        if (colorTemperature != null) {
+        if (colorTemperature == null) {
+            parcel.writeByte(0)
+        } else {
+            parcel.writeByte(1)
             parcel.writeInt(colorTemperature)
         }
     }

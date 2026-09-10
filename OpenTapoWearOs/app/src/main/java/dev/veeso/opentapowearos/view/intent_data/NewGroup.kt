@@ -9,13 +9,13 @@ class NewGroupInput(
 ) : Parcelable {
 
     constructor(parcel: Parcel) : this(
-        idList = parcel.readSerializable()!! as List<String>,
-        existingGroups = parcel.readSerializable()!! as List<String>
+        idList = parcel.createStringArrayList() ?: emptyList(),
+        existingGroups = parcel.createStringArrayList() ?: emptyList()
     )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
-        parcel.writeSerializable(idList as java.io.Serializable)
-        parcel.writeSerializable(existingGroups as java.io.Serializable)
+        parcel.writeStringList(idList)
+        parcel.writeStringList(existingGroups)
     }
 
     override fun describeContents(): Int {
@@ -41,12 +41,12 @@ class NewGroupOutput(
 
     constructor(parcel: Parcel) : this(
         groupName = parcel.readString()!!,
-        idList = parcel.readSerializable()!! as List<String>
+        idList = parcel.createStringArrayList() ?: emptyList()
     )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeString(groupName)
-        parcel.writeSerializable(idList as java.io.Serializable)
+        parcel.writeStringList(idList)
     }
 
     override fun describeContents(): Int {

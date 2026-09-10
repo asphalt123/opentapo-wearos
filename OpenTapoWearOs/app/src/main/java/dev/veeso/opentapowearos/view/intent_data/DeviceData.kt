@@ -14,10 +14,11 @@ class DeviceData(
     val status: DeviceStatus
 ) : Parcelable {
 
+    @Suppress("DEPRECATION")
     constructor(parcel: Parcel) : this(
         alias = parcel.readString()!!,
         id = parcel.readString()!!,
-        model = parcel.readSerializable()!! as DeviceModel,
+        model = DeviceModel.valueOf(parcel.readString()!!),
         endpoint = parcel.readString()!!,
         ipAddress = parcel.readString()!!,
         status = parcel.readParcelable(DeviceStatus::class.java.classLoader)!!
@@ -26,7 +27,7 @@ class DeviceData(
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeString(alias)
         parcel.writeString(id)
-        parcel.writeSerializable(model)
+        parcel.writeString(model.name)
         parcel.writeString(endpoint)
         parcel.writeString(ipAddress)
         parcel.writeParcelable(status, 0)

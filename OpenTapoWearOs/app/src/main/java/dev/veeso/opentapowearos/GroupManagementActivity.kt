@@ -1,7 +1,9 @@
 package dev.veeso.opentapowearos
 
 import android.app.Activity
+import android.os.Build
 import android.os.Bundle
+import android.os.Parcelable
 import android.util.Log
 import android.view.View
 import android.widget.*
@@ -28,8 +30,8 @@ class GroupManagementActivity : Activity() {
     override fun onResume() {
         super.onResume()
 
-        val groupData = intent.getParcelableExtra<GroupData>(GROUP_DATA_INTENT_NAME)
-        val credentials = intent.getParcelableExtra<Credentials>(CREDENTIALS_INTENT_NAME)
+        val groupData = parcelableExtraCompat(GROUP_DATA_INTENT_NAME, GroupData::class.java)
+        val credentials = parcelableExtraCompat(CREDENTIALS_INTENT_NAME, Credentials::class.java)
         if (groupData != null && credentials != null) {
             this.groupName = groupData.groupName
             Log.d(TAG, String.format("Found groups %s", groupData))
@@ -297,6 +299,16 @@ class GroupManagementActivity : Activity() {
         const val TAG = "DeviceActivity"
         const val GROUP_DATA_INTENT_NAME = "GroupData"
         const val CREDENTIALS_INTENT_NAME = "Credentials"
+    }
+
+    @Suppress("DEPRECATION")
+    private fun <T : Parcelable> parcelableExtraCompat(key: String, clazz: Class<T>): T? {
+        intent.setExtrasClassLoader(clazz.classLoader)
+        return if (Build.VERSION.SDK_INT >= 33) {
+            intent.getParcelableExtra(key, clazz)
+        } else {
+            intent.getParcelableExtra(key)
+        }
     }
 
 }

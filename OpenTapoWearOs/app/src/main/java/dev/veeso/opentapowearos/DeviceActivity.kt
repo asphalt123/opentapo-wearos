@@ -1,7 +1,9 @@
 package dev.veeso.opentapowearos
 
 import android.app.Activity
+import android.os.Build
 import android.os.Bundle
+import android.os.Parcelable
 import android.util.Log
 import android.view.View
 import android.widget.*
@@ -27,8 +29,8 @@ class DeviceActivity : Activity() {
     override fun onResume() {
         super.onResume()
 
-        val deviceData = intent.getParcelableExtra<DeviceData>(DEVICE_DATA_INTENT_NAME)
-        val credentials = intent.getParcelableExtra<Credentials>(CREDENTIALS_INTENT_NAME)
+        val deviceData = parcelableExtraCompat(DEVICE_DATA_INTENT_NAME, DeviceData::class.java)
+        val credentials = parcelableExtraCompat(CREDENTIALS_INTENT_NAME, Credentials::class.java)
         if (deviceData != null && credentials != null) {
             Log.d(TAG, String.format("Found device %s", deviceData.alias))
             setDeviceFromData(deviceData)
@@ -274,6 +276,19 @@ class DeviceActivity : Activity() {
         const val TAG = "DeviceActivity"
         const val DEVICE_DATA_INTENT_NAME = "DeviceData"
         const val CREDENTIALS_INTENT_NAME = "Credentials"
+    }
+
+    @Suppress("DEPRECATION")
+    private fun <T : Parcelable> parcelableExtraCompat(key: String, clazz: Class<T>): T? {
+        // Pin the classloader so unparcelling never depends on the default one
+        // (both apps share applicationId dev.veeso.opentapowearos; a stale or
+        // foreign loader previously surfaced as "unknown type code").
+        intent.setExtrasClassLoader(clazz.classLoader)
+        return if (Build.VERSION.SDK_INT >= 33) {
+            intent.getParcelableExtra(key, clazz)
+        } else {
+            intent.getParcelableExtra(key)
+        }
     }
 
 }

@@ -2,7 +2,9 @@ package dev.veeso.opentapowearos
 
 import android.app.Activity
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
+import android.os.Parcelable
 import android.text.InputType
 import android.util.Log
 import android.view.View
@@ -32,7 +34,7 @@ class DeviceSetupActivity : Activity() {
     override fun onResume() {
         super.onResume()
         Log.d(TAG, "onResume")
-        val credentials = intent.getParcelableExtra<Credentials>(INTENT_INPUT)
+        val credentials = parcelableExtraCompat(INTENT_INPUT, Credentials::class.java)
         if (credentials != null) {
             this.credentials = credentials
             val ipAddressText: EditText = findViewById(R.id.device_setup_ip_address)
@@ -184,6 +186,16 @@ class DeviceSetupActivity : Activity() {
         const val INTENT_INPUT = "DeviceSetupInput"
         const val INTENT_OUTPUT = "DeviceSetupOutput"
         const val TAG = "DeviceSetupActivity"
+    }
+
+    @Suppress("DEPRECATION")
+    private fun <T : Parcelable> parcelableExtraCompat(key: String, clazz: Class<T>): T? {
+        intent.setExtrasClassLoader(clazz.classLoader)
+        return if (Build.VERSION.SDK_INT >= 33) {
+            intent.getParcelableExtra(key, clazz)
+        } else {
+            intent.getParcelableExtra(key)
+        }
     }
 
 }

@@ -7,14 +7,12 @@ class GroupData(val groupName: String, val devices: List<DeviceData>) : Parcelab
 
     constructor(parcel: Parcel) : this(
         groupName = parcel.readString()!!,
-        devices = ArrayList<DeviceData>()
-    ) {
-        parcel.readList(this.devices, DeviceData::class.java.classLoader)
-    }
+        devices = parcel.createTypedArrayList(DeviceData.CREATOR) ?: emptyList()
+    )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeString(groupName)
-        parcel.writeList(devices)
+        parcel.writeTypedList(devices)
     }
 
     override fun describeContents(): Int {

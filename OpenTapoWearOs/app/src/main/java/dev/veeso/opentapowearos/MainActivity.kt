@@ -7,7 +7,9 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.net.*
+import android.os.Build
 import android.os.Bundle
+import android.os.Parcelable
 import android.util.Log
 import android.view.View
 import android.widget.ImageButton
@@ -197,15 +199,16 @@ class MainActivity : Activity() {
         )
 
         if (resultCode == RESULT_OK && data != null) {
-            val credentials = data.getParcelableExtra<Credentials>(LoginActivity.INTENT_OUTPUT)
+            data.setExtrasClassLoader(javaClass.classLoader)
+            val credentials = parcelableExtraCompat(data, LoginActivity.INTENT_OUTPUT, Credentials::class.java)
             if (credentials is Credentials) {
                 onLoginActivityResult(credentials)
             }
-            val groups = data.getParcelableExtra<NewGroupOutput>(NewGroupActivity.INTENT_OUTPUT)
+            val groups = parcelableExtraCompat(data, NewGroupActivity.INTENT_OUTPUT, NewGroupOutput::class.java)
             if (groups is NewGroupOutput) {
                 onNewGroupActivityResult(groups)
             }
-            val newDevice = data.getParcelableExtra<DeviceData>(DeviceSetupActivity.INTENT_OUTPUT)
+            val newDevice = parcelableExtraCompat(data, DeviceSetupActivity.INTENT_OUTPUT, DeviceData::class.java)
             if (newDevice is DeviceData) {
                 onDeviceSetupActivityResult(newDevice)
             }
@@ -1223,6 +1226,15 @@ class MainActivity : Activity() {
         const val SHARED_PREFS_CACHED_DEVICES = "cachedDeviceList"
         const val SHARED_PREFS_DEVICE_GROUPS = "deviceGroups"
         const val SHARED_PREFS_MANUAL_IPS = "manualIps"
+    }
+
+    @Suppress("DEPRECATION")
+    private fun <T : Parcelable> parcelableExtraCompat(data: Intent, key: String, clazz: Class<T>): T? {
+        return if (Build.VERSION.SDK_INT >= 33) {
+            data.getParcelableExtra(key, clazz)
+        } else {
+            data.getParcelableExtra(key)
+        }
     }
 
     private fun startPeriodicRefresh() {
